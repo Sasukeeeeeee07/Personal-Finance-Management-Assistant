@@ -16,7 +16,22 @@ Workflow: `.github/workflows/ci.yml`, triggered on every push and pull request. 
 
 Local checks run before committing the workflow (same commands, Windows, 2026-11-08): `dart format --set-exit-if-changed` clean (after a one-time whitespace-only format at line width 160), `flutter analyze` no issues, `flutter test` 38 passed / 3 skipped. Backend unchanged since the last recorded run (113/113 on PGlite and PostgreSQL 17.11).
 
-**Known risk for CI (KI-023):** two forecast tests pin `asOf=2026-11-08` while creating commitments at the current time; on any later date those commitments postdate `asOf` and the tests are expected to fail. They need an injectable clock or relative dates.
+**KI-023 fixed before the first push (2026-11-08, tests only).** Two forecast tests pinned `asOf=2026-11-08` while the database stamped their commitments and reservations with the real current time, so they would have failed from 9 Nov onward.
+
+| Test | Change |
+|---|---|
+| `budgets-goals.e2e-spec.ts` › Month-end forecast › combines balances, scheduled payments… | Dates derived from `AS_OF` (`addDays`); Rent/Gym commitments and their reservations placed at `AS_OF` 08:00 IST via `setCommitmentsCreatedAt`. Assertions unchanged. |
+| `review-gate.e2e-spec.ts` › B5 › does not double-count… | Same treatment for the Netflix commitment; **added** assertions that a commitment created the day after `asOf` is excluded from that forecast (and the recurring expense is expected instead) — the exact failure mode. |
+
+Results after the fix:
+
+| Run | Result |
+|---|---|
+| The two affected tests | 2 / 2 passed |
+| Full backend suite, PGlite | **113 / 113 passed** |
+| Full backend suite, real PostgreSQL 17.11 (local, after migrating a clean database) | **113 / 113 passed** |
+
+No application or forecasting code changed.
 
 ## Latest run — 2026-11-08 (Flutter step 2: Dashboard)
 

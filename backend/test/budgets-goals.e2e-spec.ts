@@ -1,4 +1,5 @@
-import { category, createTestApp, now, registerUser, TestApp, TestUser } from './helpers';
+import { addDays } from '../src/common/dates';
+import { category, createTestApp, now, registerUser, setCommitmentsCreatedAt, TestApp, TestUser } from './helpers';
 
 const ist = (date: string, time = '12:00:00') => `${date}T${time}+05:30`;
 
@@ -243,17 +244,22 @@ describe('Month-end forecast', () => {
   afterAll(async () => t.close());
 
   it('combines balances, scheduled payments, recurring items and variable spending, with assumptions', async () => {
+    // Every date is derived from the explicit forecast date, never from the machine clock (KI-023).
+    const AS_OF = '2026-11-08';
+    const day = (offset: number) => addDays(AS_OF, offset);
     const u = await registerUser(t);
     const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '30000', trackingStartDate: '2026-01-01' }).expect(201)).body;
-    await u.post('/transactions', { type: 'income', amount: '50000', accountId: bank.id, sourceName: 'Acme', categoryId: await category(u, 'Salary'), isRecurring: true, occurredAt: ist('2026-10-25') }).expect(201);
-    await u.post('/transactions', { type: 'expense', amount: '649', accountId: bank.id, merchant: 'Netflix', isRecurring: true, occurredAt: ist('2026-10-12') }).expect(201);
-    for (const d of ['2026-11-05', '2026-11-06', '2026-11-07']) {
-      await u.post('/transactions', { type: 'expense', amount: '300', accountId: bank.id, merchant: 'Cafe', occurredAt: ist(d) }).expect(201);
+    await u.post('/transactions', { type: 'income', amount: '50000', accountId: bank.id, sourceName: 'Acme', categoryId: await category(u, 'Salary'), isRecurring: true, occurredAt: ist(day(-14)) }).expect(201); // 25 Oct
+    await u.post('/transactions', { type: 'expense', amount: '649', accountId: bank.id, merchant: 'Netflix', isRecurring: true, occurredAt: ist(day(-27)) }).expect(201); // 12 Oct
+    for (const offset of [-3, -2, -1]) {
+      await u.post('/transactions', { type: 'expense', amount: '300', accountId: bank.id, merchant: 'Cafe', occurredAt: ist(day(offset)) }).expect(201); // 5–7 Nov
     }
-    await u.post('/commitments', { name: 'Rent', amount: '8000', accountId: bank.id, frequency: 'monthly', dueDate: '2026-11-20' }).expect(201);
-    await u.post('/commitments', { name: 'Gym', amount: '500', accountId: bank.id, frequency: 'weekly', dueDate: '2026-11-10' }).expect(201);
+    await u.post('/commitments', { name: 'Rent', amount: '8000', accountId: bank.id, frequency: 'monthly', dueDate: day(12) }).expect(201); // 20 Nov
+    await u.post('/commitments', { name: 'Gym', amount: '500', accountId: bank.id, frequency: 'weekly', dueDate: day(2) }).expect(201); // 10 Nov
+    // The commitments existed on the forecast date, whatever day the suite actually runs.
+    await setCommitmentsCreatedAt(t, u, ist(AS_OF, '08:00:00'));
 
-    const f = (await u.get('/forecast/month-end?asOf=2026-11-08').expect(200)).body;
+    const f = (await u.get(`/forecast/month-end?asOf=${AS_OF}`).expect(200)).body;
     expect(f).toMatchObject({
       monthEnd: '2026-11-30',
       daysLeft: 22,
