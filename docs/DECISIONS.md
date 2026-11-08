@@ -85,3 +85,23 @@ Risks to test before enabling:
 - The PGlite dev path runs as superuser, so RLS would be silently bypassed in local development.
 
 Not enabled now, to avoid destabilising the owner-scoped authorization that the tests cover. Target: behind a feature flag, with a pooled-connection isolation test.
+
+---
+
+## HANDOFF-003 decisions — resolved 2026-11-08
+HANDOFF-003 was approved by the reviewer without objection to the implementer's proposals below, so each proposal is recorded as the resolution. Any of them can be reopened by the product owner.
+
+| # | Question | Resolution |
+|---|---|---|
+| 1 | Can `tracking_start_date` be moved? (D-019, KI-019) | **No, immutable in v1.** Older history comes in as explicit historical imports. A re-basing flow (new opening balance at an earlier date) is backlog, only if users ask for it. |
+| 2 | Is the recurring-vs-commitment de-duplication heuristic acceptable? (D-016) | **Yes, until ingestion links transactions to commitments explicitly** (Priority 6). Tracked as KI-020. |
+| 3 | On payment reversal, carry a successor's top-up over? (D-018) | **No.** The still-open successor is cancelled (audited); the reopened occurrence keeps its own reserved amount. Successors are created fully reserved, so a top-up can only happen after a manual reduction, which is rare. |
+| 4 | Add OpenAPI response schemas before the dashboard? (KI-016) | **Yes — done** for the 10 dashboard endpoints, enforced by a response contract test (D-023). |
+| 5 | Offline mutation design for Transactions | **Confirmed:** a local queue of pending entries shown as "Pending — not yet confirmed", replayed with their idempotency keys, never included in balances. Implemented in Flutter step 3, after dashboard approval. |
+| 6 | First signed-in screen | **Superseded:** sign-in now lands on the Dashboard. Bottom navigation shows only the destinations that exist (Home, Profile); Transactions, Budget and Goals tabs and the quick-add button are added with their modules, so there are no non-functional controls. |
+
+### D-023 · Response contract enforcement — Accepted
+Response schemas live in `backend/src/api-responses.ts` and are attached with `@ApiOkResponse`. The response contract test compiles the frozen OpenAPI schemas with Ajv (`nullable` → null branch, `additionalProperties: false` on every object) and validates real responses. Adding, removing or retyping a field fails the build until the contract is re-frozen and logged in `API_CONTRACT.md`.
+
+### D-024 · Server-computed comparison fields — Accepted
+The dashboard needs a net position and a "month-end vs now" comparison. Both are computed on the backend (`netPosition`, `availableNow`, `availableChangeByMonthEnd`) rather than in the app, so the backend stays the only source of financial arithmetic. `availableNow` uses the same as-of reconstruction as the forecast, and equals the dashboard's `availableToSpend` when `asOf` is today (covered by a test).

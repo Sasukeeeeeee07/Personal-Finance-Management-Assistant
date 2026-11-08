@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseBoolPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { AccountResponse } from '../api-responses';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
 import { AccountsService } from './accounts.service';
@@ -11,13 +12,13 @@ import { CreateAccountDto, ReconcileAccountDto, UpdateAccountDto } from './dto/a
 export class AccountsController {
   constructor(private readonly accounts: AccountsService) {}
 
-  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [AccountResponse] })
   @ApiQuery({ name: 'includeArchived', required: false, type: Boolean })
   list(@CurrentUser() user: AuthUser, @Query('includeArchived', new ParseBoolPipe({ optional: true })) includeArchived?: boolean) {
     return this.accounts.list(user, includeArchived);
   }
 
-  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: AccountResponse })
   get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.accounts.get(user, id);
   }

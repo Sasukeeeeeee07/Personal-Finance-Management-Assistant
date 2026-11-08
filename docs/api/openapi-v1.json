@@ -30,7 +30,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountResponse"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -85,7 +95,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -217,7 +234,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -393,7 +420,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionListResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -467,7 +501,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionDetailResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -851,7 +892,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -955,7 +1003,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BudgetResponse"
+                  }
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1041,7 +1099,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1402,7 +1467,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1666,7 +1738,14 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1744,6 +1823,106 @@
       }
     },
     "schemas": {
+      "AccountResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "savings",
+              "current",
+              "cash",
+              "upi_bank",
+              "credit_card",
+              "wallet",
+              "fixed_deposit",
+              "other"
+            ]
+          },
+          "institutionName": {
+            "type": "string",
+            "nullable": true
+          },
+          "accountMask": {
+            "type": "string",
+            "nullable": true,
+            "description": "Last 2–4 digits only"
+          },
+          "currency": {
+            "type": "string",
+            "example": "INR"
+          },
+          "isLiquid": {
+            "type": "boolean"
+          },
+          "isLiability": {
+            "type": "boolean"
+          },
+          "creditLimit": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "nullable": true
+          },
+          "openingDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08",
+            "nullable": true
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Signed ledger balance; negative on a credit card means money owed"
+          },
+          "outstanding": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "nullable": true,
+            "description": "Amount owed, liabilities only"
+          },
+          "availableCredit": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "institutionName",
+          "accountMask",
+          "currency",
+          "isLiquid",
+          "isLiability",
+          "creditLimit",
+          "openingDate",
+          "trackingStartDate",
+          "archived",
+          "balance",
+          "outstanding",
+          "availableCredit"
+        ]
+      },
       "CreateAccountDto": {
         "type": "object",
         "properties": {
@@ -1843,6 +2022,43 @@
           "actualBalance"
         ]
       },
+      "CategoryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ]
+          },
+          "isEssential": {
+            "type": "boolean"
+          },
+          "icon": {
+            "type": "string",
+            "nullable": true
+          },
+          "isCustom": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "isEssential",
+          "icon",
+          "isCustom"
+        ]
+      },
       "CreateCategoryDto": {
         "type": "object",
         "properties": {
@@ -1866,6 +2082,571 @@
         "required": [
           "name",
           "kind"
+        ]
+      },
+      "TransactionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "transfer"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "needs_review",
+              "duplicate",
+              "ignored",
+              "failed"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "merchant": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "externalReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "sms",
+              "notification",
+              "statement_import",
+              "account_aggregator"
+            ]
+          },
+          "isPlanned": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isEssential": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isRecurring": {
+            "type": "boolean"
+          },
+          "duplicateOfId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isHistorical": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "amount",
+          "currency",
+          "accountId",
+          "destinationAccountId",
+          "categoryId",
+          "occurredAt",
+          "merchant",
+          "sourceName",
+          "description",
+          "notes",
+          "paymentMethod",
+          "externalReference",
+          "source",
+          "isPlanned",
+          "isEssential",
+          "isRecurring",
+          "duplicateOfId",
+          "isHistorical",
+          "version",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "TransactionListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionResponse"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "sort": {
+            "type": "string",
+            "enum": [
+              "occurredAt:desc",
+              "occurredAt:asc",
+              "amount:desc",
+              "amount:asc"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "sort"
+        ]
+      },
+      "BudgetCurrentResponse": {
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "periodStart": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "periodEnd": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08",
+            "description": "Exclusive"
+          },
+          "transactionsFrom": {
+            "type": "string",
+            "description": "Use with GET /transactions?from="
+          },
+          "transactionsTo": {
+            "type": "string",
+            "description": "Use with GET /transactions?to="
+          },
+          "limit": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "carriedOver": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "spent": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Negative when over budget"
+          },
+          "utilizationPercent": {
+            "type": "string",
+            "pattern": "^\\d{1,6}\\.\\d{2}$",
+            "example": "62.50"
+          },
+          "daysLeft": {
+            "type": "number"
+          },
+          "dailyTarget": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "thresholdsReached": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "exceeded": {
+            "type": "boolean"
+          },
+          "health": {
+            "type": "string",
+            "enum": [
+              "on_track",
+              "warning",
+              "exceeded"
+            ]
+          },
+          "healthWarningFromPercent": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "asOf",
+          "periodStart",
+          "periodEnd",
+          "transactionsFrom",
+          "transactionsTo",
+          "limit",
+          "carriedOver",
+          "spent",
+          "remaining",
+          "utilizationPercent",
+          "daysLeft",
+          "dailyTarget",
+          "thresholdsReached",
+          "exceeded",
+          "health",
+          "healthWarningFromPercent"
+        ]
+      },
+      "BudgetResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "overall",
+              "category"
+            ]
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "weekly",
+              "custom"
+            ]
+          },
+          "periodDays": {
+            "type": "number",
+            "nullable": true
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "rollover": {
+            "type": "boolean"
+          },
+          "alertThresholds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "current": {
+            "$ref": "#/components/schemas/BudgetCurrentResponse"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "scope",
+          "categoryId",
+          "period",
+          "periodDays",
+          "amount",
+          "currency",
+          "startDate",
+          "rollover",
+          "alertThresholds",
+          "status",
+          "current"
+        ]
+      },
+      "TransactionInsightResponse": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categorySpentThisMonth": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "categorySpentLastMonth": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "changeFromLastMonth": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "budget": {
+            "nullable": true,
+            "description": "Category budget this expense counts against",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BudgetResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "categoryId",
+          "categorySpentThisMonth",
+          "categorySpentLastMonth",
+          "changeFromLastMonth",
+          "budget"
+        ]
+      },
+      "TransactionDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "transfer"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "needs_review",
+              "duplicate",
+              "ignored",
+              "failed"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "destinationAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "merchant": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "nullable": true
+          },
+          "externalReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "sms",
+              "notification",
+              "statement_import",
+              "account_aggregator"
+            ]
+          },
+          "isPlanned": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isEssential": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isRecurring": {
+            "type": "boolean"
+          },
+          "duplicateOfId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isHistorical": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "insight": {
+            "nullable": true,
+            "description": "Expenses with a category only",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionInsightResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "amount",
+          "currency",
+          "accountId",
+          "destinationAccountId",
+          "categoryId",
+          "occurredAt",
+          "merchant",
+          "sourceName",
+          "description",
+          "notes",
+          "paymentMethod",
+          "externalReference",
+          "source",
+          "isPlanned",
+          "isEssential",
+          "isRecurring",
+          "duplicateOfId",
+          "isHistorical",
+          "version",
+          "createdAt",
+          "updatedAt",
+          "insight"
         ]
       },
       "CreateTransactionDto": {
@@ -2156,6 +2937,229 @@
           "transactionId"
         ]
       },
+      "MonthlyBudgetSnapshot": {
+        "type": "object",
+        "properties": {
+          "budgetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "limit": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "spent": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "remaining": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "utilizationPercent": {
+            "type": "string",
+            "pattern": "^\\d{1,6}\\.\\d{2}$",
+            "example": "62.50"
+          },
+          "dailyTarget": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          }
+        },
+        "required": [
+          "budgetId",
+          "limit",
+          "spent",
+          "remaining",
+          "utilizationPercent",
+          "dailyTarget"
+        ]
+      },
+      "UpcomingPaymentResponse": {
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Full amount due"
+          },
+          "reserved": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Amount set aside so far"
+          },
+          "dueDate": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "overdue": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reservationId",
+          "name",
+          "amount",
+          "reserved",
+          "dueDate",
+          "accountId",
+          "overdue"
+        ]
+      },
+      "CalculationResponse": {
+        "type": "object",
+        "properties": {
+          "formula": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "formula",
+          "notes"
+        ]
+      },
+      "DashboardSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "asOf": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "currency": {
+            "type": "string",
+            "example": "INR"
+          },
+          "totalBalance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "All non-liability accounts, including fixed deposits"
+          },
+          "netPosition": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "All accounts, liabilities negative"
+          },
+          "liquidBalance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "reserved": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "allocated": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Goal savings in reserve mode"
+          },
+          "availableToSpend": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "overcommitted": {
+            "type": "boolean"
+          },
+          "creditCardOutstanding": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "monthIncome": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "monthExpenses": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "monthNet": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "needsReviewCount": {
+            "type": "number"
+          },
+          "savings": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Total saved across goals (track-only and reserve)"
+          },
+          "monthlyBudget": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MonthlyBudgetSnapshot"
+              }
+            ]
+          },
+          "upcomingPayments": {
+            "description": "Up to 10 open reservations, earliest due first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpcomingPaymentResponse"
+            }
+          },
+          "calculation": {
+            "$ref": "#/components/schemas/CalculationResponse"
+          }
+        },
+        "required": [
+          "asOf",
+          "currency",
+          "totalBalance",
+          "netPosition",
+          "liquidBalance",
+          "reserved",
+          "allocated",
+          "availableToSpend",
+          "overcommitted",
+          "creditCardOutstanding",
+          "monthIncome",
+          "monthExpenses",
+          "monthNet",
+          "needsReviewCount",
+          "savings",
+          "monthlyBudget",
+          "upcomingPayments",
+          "calculation"
+        ]
+      },
       "AddMemberDto": {
         "type": "object",
         "properties": {
@@ -2390,6 +3394,235 @@
           "amount"
         ]
       },
+      "ForecastItemResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          }
+        },
+        "required": [
+          "name",
+          "amount",
+          "date"
+        ]
+      },
+      "ForecastItemGroupResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastItemResponse"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ]
+      },
+      "ForecastWindowResponse": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "enum": [
+              "last_7_days",
+              "days_8_to_30",
+              "days_31_to_90"
+            ]
+          },
+          "coveredDays": {
+            "type": "number"
+          },
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "dailyAverage": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "weight": {
+            "type": "number",
+            "description": "Effective weight after redistribution (0–1)"
+          }
+        },
+        "required": [
+          "label",
+          "coveredDays",
+          "total",
+          "dailyAverage",
+          "weight"
+        ]
+      },
+      "VariableSpendingResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "dailyAverage": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "weighted_recent",
+              "simple_average",
+              "no_history"
+            ]
+          },
+          "historyDays": {
+            "type": "number"
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastWindowResponse"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "dailyAverage",
+          "method",
+          "historyDays",
+          "windows"
+        ]
+      },
+      "ForecastResponse": {
+        "type": "object",
+        "properties": {
+          "methodVersion": {
+            "type": "string",
+            "example": "forecast-v2"
+          },
+          "asOf": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-08T04:30:00.000Z"
+          },
+          "monthEnd": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "example": "2026-11-08"
+          },
+          "daysLeft": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "startingLiquidBalance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "expectedIncome": {
+            "$ref": "#/components/schemas/ForecastItemGroupResponse"
+          },
+          "scheduledPayments": {
+            "$ref": "#/components/schemas/ForecastItemGroupResponse"
+          },
+          "expectedRecurringExpenses": {
+            "$ref": "#/components/schemas/ForecastItemGroupResponse"
+          },
+          "variableSpending": {
+            "$ref": "#/components/schemas/VariableSpendingResponse"
+          },
+          "estimatedMonthEndBalance": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "estimatedAvailableAtMonthEnd": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00"
+          },
+          "availableNow": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "Available-to-spend at the end of asOf"
+          },
+          "availableChangeByMonthEnd": {
+            "type": "string",
+            "pattern": "^-?\\d{1,17}\\.\\d{2}$",
+            "example": "8000.00",
+            "description": "estimatedAvailableAtMonthEnd − availableNow"
+          },
+          "shortfallRisk": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "formula": {
+            "type": "string"
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "methodVersion",
+          "asOf",
+          "calculatedAt",
+          "monthEnd",
+          "daysLeft",
+          "currency",
+          "startingLiquidBalance",
+          "expectedIncome",
+          "scheduledPayments",
+          "expectedRecurringExpenses",
+          "variableSpending",
+          "estimatedMonthEndBalance",
+          "estimatedAvailableAtMonthEnd",
+          "availableNow",
+          "availableChangeByMonthEnd",
+          "shortfallRisk",
+          "confidence",
+          "formula",
+          "assumptions"
+        ]
+      },
       "RegisterDto": {
         "type": "object",
         "properties": {
@@ -2514,6 +3747,92 @@
             "description": "Sign out of every device"
           }
         }
+      },
+      "MembershipResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "personal",
+              "business"
+            ]
+          },
+          "plan": {
+            "type": "string",
+            "example": "free"
+          },
+          "role": {
+            "type": "string",
+            "example": "org_admin"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "plan",
+          "role"
+        ]
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "platformRole": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "activeOrganizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "organizations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MembershipResponse"
+            }
+          },
+          "permissions": {
+            "example": [
+              "finance.own.read"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "emailVerified",
+          "platformRole",
+          "activeOrganizationId",
+          "organizations",
+          "permissions"
+        ]
       }
     }
   }

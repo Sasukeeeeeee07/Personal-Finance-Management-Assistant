@@ -78,6 +78,8 @@ export class FinancialSummaryService {
     const pos = await this.spendable(ownerId);
 
     const assets = accounts.filter((a) => !a.is_liability).reduce((acc, a) => acc.plus(balances.get(a.id) ?? 0), new Decimal(0));
+    // Net position: every account balance, with liabilities (card dues) negative.
+    const netPosition = accounts.reduce((acc, a) => acc.plus(balances.get(a.id) ?? 0), new Decimal(0));
     const cardOutstanding = accounts
       .filter((a) => a.is_liability)
       .reduce((acc, a) => acc.plus(Decimal.max((balances.get(a.id) ?? new Decimal(0)).neg(), 0)), new Decimal(0));
@@ -121,6 +123,7 @@ export class FinancialSummaryService {
       asOf,
       currency: 'INR',
       totalBalance: fmt(assets),
+      netPosition: fmt(netPosition),
       liquidBalance: fmt(pos.liquidBalance),
       reserved: fmt(pos.reserved),
       allocated: fmt(pos.allocated),
@@ -151,6 +154,7 @@ export class FinancialSummaryService {
           'Reserved money is a plan inside this app. It is not blocked or frozen at your bank.',
           'Transfers between your own accounts are not counted as income or expenses.',
           'Credit card dues are shown separately. Create a commitment for your card bill to reserve money for it.',
+          'Net position is the total of all your accounts, including fixed deposits, minus credit card dues.',
           'Allocated is money saved in goals set to reserve, except goals kept in a non-liquid account such as a fixed deposit. Track-only goals are not subtracted.',
         ],
       },

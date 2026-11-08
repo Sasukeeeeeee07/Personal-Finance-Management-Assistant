@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { TransactionDetailResponse, TransactionListResponse } from '../api-responses';
 import { validateIdempotencyKey } from '../common/idempotency.service';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
@@ -12,12 +13,12 @@ import { TransactionsService } from './transactions.service';
 export class TransactionsController {
   constructor(private readonly transactions: TransactionsService) {}
 
-  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: TransactionListResponse })
   list(@CurrentUser() user: AuthUser, @Query() q: ListTransactionsQuery) {
     return this.transactions.list(user, q);
   }
 
-  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: TransactionDetailResponse })
   get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.transactions.get(user, id);
   }

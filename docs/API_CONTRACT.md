@@ -1,6 +1,6 @@
 # API Contract — v1 (frozen 2026-11-08)
 
-Base path: `/api/v1`. The machine-readable contract is [`docs/api/openapi-v1.json`](api/openapi-v1.json) (41 paths). The test `backend/test/api-contract.e2e-spec.ts` fails whenever the generated contract differs from the frozen file.
+Base path: `/api/v1`. The machine-readable contract is [`docs/api/openapi-v1.json`](api/openapi-v1.json) (41 paths, 44 schemas). The test `backend/test/api-contract.e2e-spec.ts` fails whenever the generated contract differs from the frozen file.
 
 To change the API on purpose:
 1. Make the change.
@@ -23,11 +23,28 @@ Breaking changes need a new version or reviewer approval.
 | Idempotency | `Idempotency-Key` header on `POST /transactions` and `POST /goals/:id/contributions` (D-017). |
 | Versioning | Versioned by URL (`/api/v1`). Additive fields may appear within v1; clients must ignore unknown fields. |
 
+## Response schemas
+Documented, and enforced by `backend/test/response-contract.e2e-spec.ts`, for every endpoint the Flutter dashboard consumes:
+
+| Endpoint | Schema |
+|---|---|
+| `GET /auth/me` | `MeResponse` |
+| `GET /accounts`, `GET /accounts/{id}` | `AccountResponse` |
+| `GET /categories` | `CategoryResponse` |
+| `GET /budgets`, `GET /budgets/{id}` | `BudgetResponse` (+ `BudgetCurrentResponse`) |
+| `GET /dashboard/summary` | `DashboardSummaryResponse` |
+| `GET /forecast/month-end` | `ForecastResponse` |
+| `GET /transactions` | `TransactionListResponse` |
+| `GET /transactions/{id}` | `TransactionDetailResponse` |
+
+The contract test validates real responses, for both a populated and an empty account, against the **frozen** file. Every documented field must be present and no undocumented field is allowed. Money fields carry the pattern `^-?\d{1,17}\.\d{2}$`, dates `^\d{4}-\d{2}-\d{2}$`, and timestamps `format: date-time`.
+
 ## Known gaps
-- Response bodies are not yet described as OpenAPI schemas (request bodies are). Flutter models are written by hand against the documented responses and checked against the running API. Response schemas will be added module by module (KI-016).
+- Response schemas for the remaining endpoints (reservations, commitments, goals, write endpoints) will be added as their Flutter modules start (KI-016).
 
 ## Change log
 
 | Date | Change | Breaking? |
 |---|---|---|
+| 2026-11-08 | Flutter step 2: response schemas for the 10 dashboard endpoints; new fields `netPosition` (dashboard summary), `availableNow` and `availableChangeByMonthEnd` (forecast). | No — additive. |
 | 2026-11-08 | Initial freeze (review gate). Adds `historical`, `trackingStartDate`, `allocationMode`, settlement history, contribution reversal, `sort`, `Idempotency-Key` and the uniform error `code`. | Additive over the pre-gate API. Behaviour changes: new goals are track-only (D-015), old-dated manual transactions are rejected (D-019), warning starts at the lowest threshold (D-020). |

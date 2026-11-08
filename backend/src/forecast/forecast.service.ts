@@ -1,5 +1,6 @@
 import { Controller, Get, HttpStatus, Inject, Injectable, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ForecastResponse } from '../api-responses';
 import { sql } from 'kysely';
 import Decimal from 'decimal.js';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
@@ -77,7 +78,7 @@ export class ForecastService {
         .where('r.owner_id', '=', ownerId)
         .where('r.created_at', '<', endOfAsOf)
         .where((eb: any) => eb.or([eb('r.status', '=', 'active'), eb('r.closed_at', '>=', endOfAsOf)]));
-    const reservations = await openAtAsOf(this.db.selectFrom('money_reservations as r').select(['r.name', 'r.target_amount', 'r.due_date', 'r.commitment_id', 'r.occurrence_date']))
+    const reservations = await openAtAsOf(this.db.selectFrom('money_reservations as r').select(['r.name', 'r.target_amount', 'r.reserved_amount', 'r.due_date', 'r.commitment_id', 'r.occurrence_date']))
       .where('r.due_date', '<', nextMonth)
       .orderBy('r.due_date')
       .execute();
@@ -171,6 +172,9 @@ export class ForecastService {
       .where((eb) => eb.or([eb('g.account_id', 'is', null), eb('a.is_liquid', '=', true)]))
       .executeTakeFirstOrThrow();
     const availableAtMonthEnd = monthEndBalance.minus(later.total).minus(goals.total);
+    // Available-to-spend at the end of asOf, using the same as-of reconstruction, for comparison.
+    const reservedThisMonth = reservations.reduce((acc: Decimal, r: any) => acc.plus(r.reserved_amount), new Decimal(0));
+    const availableNow = liquid.minus(reservedThisMonth).minus(later.total).minus(goals.total);
 
     const [w1, w2, w3] = this.config.forecastWeights;
     const assumptions = [
@@ -210,6 +214,10 @@ export class ForecastService {
       },
       estimatedMonthEndBalance: fmt(monthEndBalance),
       estimatedAvailableAtMonthEnd: fmt(availableAtMonthEnd),
+      /** Available-to-spend at the end of asOf (today by default). */
+      availableNow: fmt(availableNow),
+      /** estimatedAvailableAtMonthEnd − availableNow: how much the spendable amount is expected to change. */
+      availableChangeByMonthEnd: fmt(availableAtMonthEnd.minus(availableNow)),
       shortfallRisk: monthEndBalance.isNegative(),
       confidence: spend.historyDays >= 90 ? 'high' : spend.historyDays >= 30 ? 'medium' : 'low',
       formula: 'startingLiquidBalance + expectedIncome − scheduledPayments − expectedRecurringExpenses − variableSpending',
@@ -224,7 +232,7 @@ export class ForecastService {
 export class ForecastController {
   constructor(private readonly forecast: ForecastService) {}
 
-  @Get('month-end') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get('month-end') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: ForecastResponse })
   @ApiOperation({ summary: 'Estimated month-end balance with the method, assumptions and confidence behind it' })
   monthEnd(@CurrentUser() user: AuthUser, @Query() q: AsOfQuery) {
     return this.forecast.monthEnd(user, q.asOf);

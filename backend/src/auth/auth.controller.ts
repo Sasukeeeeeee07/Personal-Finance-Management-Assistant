@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { MeResponse } from '../api-responses';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { AuthUser, CurrentUser, Public } from '../common/auth-context';
@@ -66,7 +67,7 @@ export class AuthController {
     return this.auth.logout(user.userId, user.sessionId, dto.allDevices);
   }
 
-  @ApiBearerAuth() @Get('me')
+  @ApiBearerAuth() @Get('me') @ApiOkResponse({ type: MeResponse })
   me(@CurrentUser() user: AuthUser) {
     return this.auth.me(user.userId, user.organizationId, user.permissions);
   }

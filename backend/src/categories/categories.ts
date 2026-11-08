@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Injectable, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiProperty, ApiPropertyOptional, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiProperty, ApiPropertyOptional, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { CategoryResponse } from '../api-responses';
 import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { DomainError, notFound } from '../common/errors';
@@ -69,7 +70,7 @@ export class CategoriesService {
 export class CategoriesController {
   constructor(private readonly categories: CategoriesService) {}
 
-  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [CategoryResponse] })
   @ApiQuery({ name: 'kind', required: false, enum: ['income', 'expense'] })
   list(@CurrentUser() user: AuthUser, @Query('kind') kind?: 'income' | 'expense') {
     if (kind && kind !== 'income' && kind !== 'expense') throw new DomainError('invalid_kind', 'kind must be income or expense', HttpStatus.BAD_REQUEST);

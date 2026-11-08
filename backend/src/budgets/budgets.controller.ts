@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BudgetResponse } from '../api-responses';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
 import { AsOfQuery, CreateBudgetDto, UpdateBudgetDto } from './budget.dto';
@@ -11,7 +12,7 @@ import { BudgetsService } from './budgets.service';
 export class BudgetsController {
   constructor(private readonly budgets: BudgetsService) {}
 
-  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [BudgetResponse] })
   @ApiOperation({ summary: 'Active budgets with spending in the current period' })
   list(@CurrentUser() user: AuthUser, @Query() q: AsOfQuery) {
     return this.budgets.list(user, q.asOf);
@@ -23,7 +24,7 @@ export class BudgetsController {
     return this.budgets.alerts(user);
   }
 
-  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: BudgetResponse })
   get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Query() q: AsOfQuery) {
     return this.budgets.get(user, id, q.asOf);
   }
