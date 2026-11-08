@@ -37,10 +37,23 @@ class SafeExceptionFilter implements ExceptionFilter {
   }
 }
 
+const LOCAL_DEV_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?$/;
+
+/**
+ * CORS: production allows only CORS_ORIGINS. Outside production, any http://localhost or 127.0.0.1
+ * port is also allowed, because `flutter run -d chrome` and other dev servers pick a random port.
+ * Requests without an Origin header (mobile apps, curl, server-to-server) are not affected by CORS.
+ */
+export function isAllowedOrigin(config: AppConfig, origin: string | undefined): boolean {
+  if (!origin) return true;
+  if (config.corsOrigins.includes(origin)) return true;
+  return config.nodeEnv !== 'production' && LOCAL_DEV_ORIGIN.test(origin);
+}
+
 export function configureApp(app: INestApplication, config: AppConfig) {
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
-  app.enableCors({ origin: config.corsOrigins, credentials: false });
+  app.enableCors({ origin: (origin: string | undefined, done: (err: Error | null, allow?: boolean) => void) => done(null, isAllowedOrigin(config, origin)), credentials: false });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
