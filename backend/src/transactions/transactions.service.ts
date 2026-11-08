@@ -9,6 +9,8 @@ import { AccountsService } from '../accounts/accounts.service';
 import { AuditService } from '../audit/audit.service';
 import { CategoriesService } from '../categories/categories';
 import { ReservationsService } from '../reservations/reservations.service';
+import { BudgetsService } from '../budgets/budgets.service';
+import { today } from '../common/dates';
 import { LedgerService } from './ledger.service';
 import { CreateTransactionDto, ListTransactionsQuery, UpdateTransactionDto } from './dto/transaction.dto';
 
@@ -52,9 +54,16 @@ export class TransactionsService {
     private readonly categories: CategoriesService,
     private readonly reservations: ReservationsService,
     private readonly audit: AuditService,
+    private readonly budgets: BudgetsService,
   ) {}
 
+  /** Records the transaction, then reports any budget thresholds it pushed past. */
   async create(user: AuthUser, dto: CreateTransactionDto) {
+    const result = await this.createOnce(user, dto);
+    return { ...result, budgetAlerts: await this.budgets.evaluateAlertsSafely(user.userId) };
+  }
+
+  private async createOnce(user: AuthUser, dto: CreateTransactionDto) {
     try {
       return await this.db.transaction().execute((trx) => this.createIn(trx, user, dto));
     } catch (e: any) {
@@ -119,7 +128,7 @@ export class TransactionsService {
   }
 
   async update(user: AuthUser, id: string, dto: UpdateTransactionDto) {
-    return this.db.transaction().execute(async (trx) => {
+    const updated = await this.db.transaction().execute(async (trx) => {
       const before = await this.findOwned(trx, user.userId, id, true);
       if (before.version !== dto.version) {
         throw new DomainError('stale_version', 'This transaction was changed somewhere else. Reload it and try again.', HttpStatus.CONFLICT);
@@ -162,6 +171,8 @@ export class TransactionsService {
       }
       return presentTransaction(after);
     });
+    await this.budgets.evaluateAlertsSafely(user.userId);
+    return updated;
   }
 
   async remove(user: AuthUser, id: string) {
@@ -285,8 +296,8 @@ export class TransactionsService {
       categorySpentThisMonth: fmt(this_month),
       categorySpentLastMonth: fmt(last_month),
       changeFromLastMonth: fmt(change),
-      // Budget impact and remaining category balance arrive with the budgets module (Phase 3).
-      budget: null,
+      // The category budget this expense counts against, in the period the expense falls in.
+      budget: await this.budgets.impactFor(ownerId, t.category_id, today('Asia/Kolkata', new Date(t.occurred_at))),
     };
   }
 

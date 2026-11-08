@@ -99,3 +99,15 @@ CREATE TABLE audit_logs (
 CREATE INDEX audit_logs_entity_idx ON audit_logs (entity_type, entity_id);
 CREATE INDEX audit_logs_actor_idx ON audit_logs (actor_id, created_at DESC);
 `;
+
+export const down = /* sql */ `
+DROP TABLE audit_logs;
+DROP TABLE auth_tokens;
+DROP TABLE sessions;
+DROP TABLE organization_members;
+DROP TABLE users;
+DROP TABLE role_permissions;
+DROP TABLE permissions;
+DROP TABLE roles;
+DROP TABLE organizations;
+`;

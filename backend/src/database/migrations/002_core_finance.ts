@@ -90,3 +90,10 @@ CREATE TABLE ledger_entries (
 CREATE INDEX ledger_entries_account_idx ON ledger_entries (account_id);
 CREATE INDEX ledger_entries_transaction_idx ON ledger_entries (transaction_id);
 `;
+
+export const down = /* sql */ `
+DROP TABLE ledger_entries;
+DROP TABLE transactions;
+DROP TABLE transaction_categories;
+DROP TABLE bank_accounts;
+`;

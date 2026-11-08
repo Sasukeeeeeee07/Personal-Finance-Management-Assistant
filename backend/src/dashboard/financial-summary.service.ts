@@ -7,6 +7,7 @@ import { fmt, money } from '../common/money';
 import { DATABASE } from '../database/database.module';
 import type { DB, Executor } from '../database/schema';
 import { LedgerService } from '../transactions/ledger.service';
+import { BudgetsService } from '../budgets/budgets.service';
 
 export interface SpendablePosition {
   liquidBalance: Decimal;
@@ -20,6 +21,7 @@ export class FinancialSummaryService {
   constructor(
     @Inject(DATABASE) private readonly db: DB,
     private readonly ledger: LedgerService,
+    private readonly budgets: BudgetsService,
   ) {}
 
   /** available-to-spend = liquid balance − active reservations − other allocated funds */
@@ -34,8 +36,37 @@ export class FinancialSummaryService {
       .where('status', '=', 'active')
       .executeTakeFirstOrThrow();
     const reserved = money(r.total);
-    const allocated = new Decimal(0); // Goal allocations arrive with the goals module (Phase 3).
+    const allocated = await this.goalAllocations(ownerId, db);
     return { liquidBalance, reserved, allocated, available: liquidBalance.minus(reserved).minus(allocated) };
+  }
+
+  /**
+   * Money earmarked for savings goals (D-009). Goals kept in a non-liquid account (e.g. a fixed
+   * deposit) are excluded because that money is already outside the liquid balance.
+   */
+  async goalAllocations(ownerId: string, db: Executor = this.db): Promise<Decimal> {
+    const r = await db
+      .selectFrom('goal_contributions as c')
+      .innerJoin('financial_goals as g', 'g.id', 'c.goal_id')
+      .leftJoin('bank_accounts as a', 'a.id', 'g.account_id')
+      .select(sql<string>`COALESCE(SUM(c.amount), 0)`.as('total'))
+      .where('g.owner_id', '=', ownerId)
+      .where('g.status', '!=', 'archived')
+      .where((eb) => eb.or([eb('g.account_id', 'is', null), eb('a.is_liquid', '=', true)]))
+      .executeTakeFirstOrThrow();
+    return money(r.total);
+  }
+
+  /** Total saved across all non-archived goals, wherever the money is kept. */
+  async totalSaved(ownerId: string): Promise<Decimal> {
+    const r = await this.db
+      .selectFrom('goal_contributions as c')
+      .innerJoin('financial_goals as g', 'g.id', 'c.goal_id')
+      .select(sql<string>`COALESCE(SUM(c.amount), 0)`.as('total'))
+      .where('g.owner_id', '=', ownerId)
+      .where('g.status', '!=', 'archived')
+      .executeTakeFirstOrThrow();
+    return money(r.total);
   }
 
   async summary(user: AuthUser, asOf = today()) {
@@ -82,6 +113,8 @@ export class FinancialSummaryService {
 
     const income = money(flows.income);
     const expenses = money(flows.expenses);
+    const savings = await this.totalSaved(ownerId);
+    const budget = await this.budgets.overallMonthly(ownerId, asOf);
     return {
       asOf,
       currency: 'INR',
@@ -96,6 +129,10 @@ export class FinancialSummaryService {
       monthExpenses: fmt(expenses),
       monthNet: fmt(income.minus(expenses)),
       needsReviewCount: Number(review.n),
+      savings: fmt(savings),
+      monthlyBudget: budget
+        ? { budgetId: budget.id, limit: budget.current.limit, spent: budget.current.spent, remaining: budget.current.remaining, utilizationPercent: budget.current.utilizationPercent, dailyTarget: budget.current.dailyTarget }
+        : null,
       upcomingPayments: upcoming.map((u) => ({
         reservationId: u.id,
         name: u.name,
@@ -112,6 +149,7 @@ export class FinancialSummaryService {
           'Reserved money is a plan inside this app. It is not blocked or frozen at your bank.',
           'Transfers between your own accounts are not counted as income or expenses.',
           'Credit card dues are shown separately. Create a commitment for your card bill to reserve money for it.',
+          'Allocated is money saved for goals, except goals kept in a non-liquid account such as a fixed deposit.',
         ],
       },
     };

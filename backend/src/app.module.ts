@@ -17,6 +17,11 @@ import { ReservationsService } from './reservations/reservations.service';
 import { LedgerService } from './transactions/ledger.service';
 import { TransactionsController } from './transactions/transactions.controller';
 import { TransactionsService } from './transactions/transactions.service';
+import { BudgetsController } from './budgets/budgets.controller';
+import { BudgetsService } from './budgets/budgets.service';
+import { GoalsController } from './goals/goals.controller';
+import { GoalsService } from './goals/goals.service';
+import { ForecastController, ForecastService } from './forecast/forecast.service';
 
 @ApiTags('health')
 @Controller('health')
@@ -35,7 +40,7 @@ export function buildAppModule(config: AppConfig = loadConfig()) {
       ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: config.nodeEnv === 'test' ? 10_000 : 300 }]),
       AuthModule,
     ],
-    controllers: [HealthController, AccountsController, CategoriesController, TransactionsController, ReservationsController, DashboardController, OrganizationsController],
+    controllers: [HealthController, AccountsController, CategoriesController, TransactionsController, ReservationsController, DashboardController, OrganizationsController, BudgetsController, GoalsController, ForecastController],
     providers: [
       { provide: APP_GUARD, useClass: ThrottlerGuard },
       LedgerService,
@@ -45,6 +50,9 @@ export function buildAppModule(config: AppConfig = loadConfig()) {
       ReservationsService,
       FinancialSummaryService,
       OrganizationsService,
+      BudgetsService,
+      GoalsService,
+      ForecastService,
     ],
   })
   class AppModule {}

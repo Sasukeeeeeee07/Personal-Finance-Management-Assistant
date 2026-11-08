@@ -3,9 +3,13 @@ import type { DB } from './schema';
 import * as m001 from './migrations/001_foundation';
 import * as m002 from './migrations/002_core_finance';
 import * as m003 from './migrations/003_reservations';
+import * as m004 from './migrations/004_budgets_goals';
 import { PERMISSION_DESCRIPTIONS, ROLE_DEFINITIONS } from '../rbac/permissions';
 
-const MIGRATIONS: { name: string; up: string }[] = [m001, m002, m003];
+const MIGRATIONS: { name: string; up: string; down?: string }[] = [m001, m002, m003, m004];
+
+// Prepared statements accept one command each; migrations contain no semicolons inside bodies.
+const statements = (script: string) => script.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean);
 
 export const SYSTEM_CATEGORIES: { name: string; kind: 'income' | 'expense'; essential: boolean }[] = [
   { name: 'Salary', kind: 'income', essential: false },
@@ -40,15 +44,26 @@ export async function migrate(db: DB, log: (msg: string) => void = () => {}): Pr
   for (const m of MIGRATIONS) {
     if (applied.has(m.name)) continue;
     await db.transaction().execute(async (trx) => {
-      // Prepared statements accept one command each; migrations contain no semicolons inside bodies.
-      for (const statement of m.up.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean)) {
-        await sql.raw(statement).execute(trx);
-      }
+      for (const statement of statements(m.up)) await sql.raw(statement).execute(trx);
       await trx.insertInto('_migrations').values({ name: m.name }).execute();
     });
     log(`Applied migration ${m.name}`);
   }
   await seedReferenceData(db);
+}
+
+/** Roll back the most recently applied migration. Destroys the data in the tables it created. */
+export async function rollbackLast(db: DB, log: (msg: string) => void = () => {}): Promise<string | null> {
+  const last = await db.selectFrom('_migrations').select('name').orderBy('name', 'desc').limit(1).executeTakeFirst();
+  if (!last) return null;
+  const m = MIGRATIONS.find((x) => x.name === last.name);
+  if (!m?.down) throw new Error(`Migration ${last.name} has no down script`);
+  await db.transaction().execute(async (trx) => {
+    for (const statement of statements(m.down!)) await sql.raw(statement).execute(trx);
+    await trx.deleteFrom('_migrations').where('name', '=', m.name).execute();
+  });
+  log(`Rolled back migration ${m.name}`);
+  return m.name;
 }
 
 /** Idempotent seed of roles, permissions and system categories. Contains no user data. */
