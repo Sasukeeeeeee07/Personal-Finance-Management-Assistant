@@ -4,6 +4,89 @@ Newest entry first. Each entry is self-contained: a reviewer should not need to 
 
 ---
 
+## HANDOFF-004 · Flutter step 2 — Dashboard
+**Date:** 2026-11-08 · **Branch:** `feature/flutter-dashboard` · **Implementer:** Claude · **Status:** awaiting review (Transactions module not started, as instructed)
+
+### Pre-implementation items (from the HANDOFF-003 review)
+1. **OpenAPI response schemas** for the dashboard and every endpoint it depends on (10 endpoints, 44 schemas total) — `backend/src/api-responses.ts`, attached with `@ApiOkResponse`.
+2. **API_CONTRACT.md** updated (response schema table, change log).
+3. **Frozen contract regenerated intentionally** with `npm run openapi:freeze`; the snapshot test fails on any unlogged change.
+4. **Response contract tests** — `backend/test/response-contract.e2e-spec.ts` validates real responses (populated and empty accounts) against the frozen schemas with Ajv: no undocumented fields, every documented field required, money `^-?\d{1,17}\.\d{2}$`, dates `YYYY-MM-DD`, ISO timestamps. It also validates the Flutter test fixtures, so app tests cannot drift from the API.
+5. **Six HANDOFF-003 decisions** recorded with resolutions in `DECISIONS.md` (plus D-023 response contract enforcement, D-024 server-computed comparison fields).
+
+### Dashboard (what the user sees)
+| Section | Content | Source |
+|---|---|---|
+| Your money | Available-to-spend hero with liquid balance − reserved − set aside for goals; "How this is worked out" sheet (backend notes); total balance, **net position**, savings in goals, card dues, income and spending this month; **prominent card-dues notice** (D-006); review-queue count | `GET /dashboard/summary` |
+| Budgets | Overall monthly budget first (spent, remaining, daily target), then category budgets ordered by severity; warning/exceeded styling from backend `health` | `GET /budgets`, `GET /categories` |
+| Money Lock | Reserved total, overdue count, upcoming commitments with due label, date, amount, reserved/fully reserved | `GET /dashboard/summary` (`upcomingPayments`) |
+| Month-end forecast | Expected month-end balance, confidence, available now vs at month end and the difference (**server-computed**), expandable breakdown that adds up to the estimate, all backend assumptions | `GET /forecast/month-end` |
+| Recent transactions | Latest 5 confirmed (income, expense, transfer) with category, merchant, date, account; tap → read-only detail with category month-vs-last-month and budget impact | `GET /transactions`, `GET /transactions/{id}`, `GET /accounts` |
+
+States: skeleton on first load; per-section errors with retry (one failing endpoint never blanks the others); stale data kept with a "couldn't refresh / offline" note; offline banner; empty states for a new account; pull-to-refresh plus a Refresh button (mouse, keyboard, screen readers); light and dark; phone (single column + bottom bar) and ≥840 px (two columns + navigation rail).
+
+### 1. Files modified
+**Backend:** `src/api-responses.ts` (new), `src/common/api-docs.ts` (new), `src/dashboard/financial-summary.service.ts` (`netPosition`), `src/forecast/forecast.service.ts` (`availableNow`, `availableChangeByMonthEnd`), controllers for auth/accounts/categories/budgets/dashboard/forecast/transactions (`@ApiOkResponse`), `test/response-contract.e2e-spec.ts` (new), `scripts/demo-data.ts` (new, dev-only), `package.json` (ajv, ajv-formats dev deps), `docs/api/openapi-v1.json` (re-frozen).
+**Mobile:** `lib/features/dashboard/{data/dashboard_models.dart, data/dashboard_api.dart, state/dashboard_providers.dart, ui/dashboard_screen.dart, ui/dashboard_sections.dart, ui/section_card.dart}`, `lib/features/transactions/ui/transaction_detail_screen.dart`, `lib/features/shell/home_shell.dart`, `lib/shared/format.dart`, `lib/core/router/router.dart`; tests `test/features/{dashboard_test.dart, dashboard_models_test.dart, auth_flow_test.dart}`, `test/support/{app_harness.dart, fixtures.dart}`, `test/fixtures/*.json` (10 real API responses), `test/integration/live_api_test.dart`; Android manifests (INTERNET permission; cleartext HTTP in debug builds only).
+**Docs:** `API_CONTRACT.md`, `DECISIONS.md`, `PROGRESS.md`, `TEST_REPORT.md`, `KNOWN_ISSUES.md`, this file, `docs/screenshots/11–23`.
+
+### 2. Database migrations
+None.
+
+### 3. API endpoints consumed by the dashboard (all GET, all owner-scoped)
+`/auth/me`, `/dashboard/summary`, `/budgets`, `/forecast/month-end`, `/transactions?status=confirmed&pageSize=5&sort=occurredAt:desc`, `/transactions/{id}`, `/accounts?includeArchived=true`, `/categories`. A widget test asserts the dashboard sends only GET requests.
+**API changes:** additive fields `netPosition`, `availableNow`, `availableChangeByMonthEnd`; response schemas documented. No breaking changes.
+
+### 4. Tests executed
+| Suite | Result |
+|---|---|
+| Backend `npm test` (PGlite) | **113/113 passed** (incl. 9 response-contract tests) |
+| Backend on real PostgreSQL 17.11 (local) | **113/113 passed** |
+| Flutter `flutter analyze` | No issues |
+| Flutter `flutter test` | **38 passed**, 3 skipped (live tests without a backend URL) |
+| Flutter live API tests against the running backend | **3/3 passed** (incl. every dashboard endpoint parsed into typed models; available-to-spend equals the backend's value) |
+| Accessibility checks in widget tests | Android tap-target, labelled tap-target and text-contrast guidelines pass on the dashboard |
+
+### 5. Flutter build results
+| Build | Result |
+|---|---|
+| Web release (`flutter build web --release`) | Succeeded; used for the screenshots |
+| Android debug APK (`flutter clean && flutter build apk --debug`) | **Succeeded** — `app-debug.apk`, 150.7 MB. Incremental builds fail locally because of spaces in the path (KI-021). |
+| Android emulator run | **Not done** — cmdline-tools missing (KI-017) |
+| iOS | Not attempted (needs macOS) |
+
+### 6. Screenshots (`docs/screenshots/`)
+| File | Shows |
+|---|---|
+| `11-dashboard-your-money.jpg` | Hero, net position, card-dues notice |
+| `12-dashboard-budgets.jpg` | Overall + category budgets with warning/exceeded |
+| `13-dashboard-money-lock.jpg` | Upcoming commitments, overdue item, partial reservation |
+| `14-dashboard-forecast-breakdown.jpg` | Forecast, confidence, now vs month end, breakdown adding up to the estimate |
+| `15-dashboard-recent-transactions.jpg` | Recent income/expenses/transfer with category, merchant, account |
+| `16-transaction-detail.jpg` | Detail with category insight and budget impact |
+| `17-dashboard-dark.jpg` | Dark theme |
+| `18-dashboard-loading-skeleton.jpg` | Skeleton loading state |
+| `19-dashboard-wide-1280.jpg` | Two-column layout with navigation rail |
+| `20-dashboard-offline-last-figures.jpg` | Offline: last figures kept, offline banner, per-section note (banner copy later changed to "Pull down or tap Refresh…") |
+| `21-dashboard-empty-account.jpg`, `22-dashboard-empty-sections.jpg` | New account: zero figures and empty states |
+| `23-session-ended-notice.jpg` | Session ended (server restarted) → notice on sign-in |
+
+### 7. Issues found and fixed during this step
+- The forecast breakdown initially omitted "recurring expenses", so its lines did not add up to the estimate (found by reviewing the screenshot against the backend figures). Fixed and covered by a test that the displayed terms sum to the backend estimate.
+- Pull-to-refresh is touch-only on web/desktop; added a Refresh button (tested).
+
+### 8. Outstanding issues
+See KNOWN_ISSUES.md: KI-001 (no GitHub remote / CI never run), KI-017 (no emulator run), KI-021 (incremental Android builds fail with spaces in the project path), KI-022 (dashboard data is not cached across app restarts).
+
+### 9. Decisions requiring review
+1. **Net position** = sum of all account balances (fixed deposits included, card dues negative). Is that the definition you want on the dashboard, or should non-liquid assets be shown separately?
+2. **Budget ordering:** overall budget first, then categories by severity (exceeded → warning → on track). OK?
+3. **Recent transactions** include transfers (shown neutrally, no sign). Should the dashboard show only income and expenses?
+4. **Offline persistence:** figures are kept in memory while the app runs, not across restarts (KI-022). Persist an encrypted last-known snapshot, or keep showing the offline screen after a cold start?
+5. **Navigation:** only Home and Profile are visible until their modules exist. Confirm the next module adds the Transactions tab and the quick-add button together.
+
+---
+
 ## HANDOFF-003 · Priority 3 gate fixes + Flutter step 1 (foundation and authentication)
 **Date:** 2026-11-08 · **Branches:** `feature/reservation-lifecycle` (merged to `develop`), `feature/flutter-app` · **Implementer:** Claude
 

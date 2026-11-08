@@ -119,6 +119,23 @@ describe('Response contract (frozen OpenAPI)', () => {
     validate('/api/v1/auth/me', (await u.get('/auth/me').expect(200)).body);
   });
 
+  it('Flutter test fixtures still match the contract', () => {
+    const dir = join(__dirname, '..', '..', 'mobile', 'test', 'fixtures');
+    const map: Record<string, string> = {
+      'me.json': '/api/v1/auth/me',
+      'dashboard_summary.json': '/api/v1/dashboard/summary',
+      'dashboard_summary_empty.json': '/api/v1/dashboard/summary',
+      'budgets.json': '/api/v1/budgets',
+      'forecast.json': '/api/v1/forecast/month-end',
+      'forecast_empty.json': '/api/v1/forecast/month-end',
+      'transactions_recent.json': '/api/v1/transactions',
+      'transaction_detail.json': '/api/v1/transactions/{id}',
+      'accounts.json': '/api/v1/accounts',
+      'categories.json': '/api/v1/categories',
+    };
+    for (const [file, path] of Object.entries(map)) validate(path, JSON.parse(readFileSync(join(dir, file), 'utf8')));
+  });
+
   it('the validator really rejects drift', () => {
     const fn = ajv.compile({ ...strict(responseSchema('/api/v1/accounts/{id}')), components: strict(FROZEN.components) });
     const good = { id: '00000000-0000-4000-8000-000000000000', name: 'a', type: 'savings', institutionName: null, accountMask: null, currency: 'INR', isLiquid: true, isLiability: false, creditLimit: null, openingDate: null, trackingStartDate: '2026-01-01', archived: false, balance: '1.00', outstanding: null, availableCredit: null };

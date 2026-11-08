@@ -1,0 +1,72 @@
+{
+  "id": "064c761d-2e96-4489-92c6-71e12e651692",
+  "type": "expense",
+  "status": "confirmed",
+  "amount": "250.00",
+  "currency": "INR",
+  "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+  "destinationAccountId": null,
+  "categoryId": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+  "occurredAt": "2026-11-08T07:45:00.000Z",
+  "merchant": "Zomato",
+  "sourceName": null,
+  "description": null,
+  "notes": null,
+  "paymentMethod": null,
+  "externalReference": null,
+  "source": "manual",
+  "isPlanned": null,
+  "isEssential": false,
+  "isRecurring": false,
+  "duplicateOfId": null,
+  "isHistorical": false,
+  "version": 1,
+  "createdAt": "2026-11-08T08:46:04.442Z",
+  "updatedAt": "2026-11-08T08:46:04.442Z",
+  "insight": {
+    "categoryId": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+    "categorySpentThisMonth": "4670.00",
+    "categorySpentLastMonth": "380.00",
+    "changeFromLastMonth": "4290.00",
+    "budget": {
+      "id": "f68989ad-b9ac-4354-a6e4-4a298ae6bd3a",
+      "name": "Food",
+      "scope": "category",
+      "categoryId": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+      "period": "monthly",
+      "periodDays": null,
+      "amount": "6000.00",
+      "currency": "INR",
+      "startDate": "2026-11-01",
+      "rollover": false,
+      "alertThresholds": [
+        50,
+        75,
+        90,
+        100
+      ],
+      "status": "active",
+      "current": {
+        "asOf": "2026-11-08",
+        "periodStart": "2026-11-01",
+        "periodEnd": "2026-12-01",
+        "transactionsFrom": "2026-11-01T00:00:00+05:30",
+        "transactionsTo": "2026-12-01T00:00:00+05:30",
+        "limit": "6000.00",
+        "carriedOver": "0.00",
+        "spent": "4670.00",
+        "remaining": "1330.00",
+        "utilizationPercent": "77.83",
+        "daysLeft": 23,
+        "dailyTarget": "57.82",
+        "thresholdsReached": [
+          50,
+          75
+        ],
+        "exceeded": false,
+        "health": "warning",
+        "healthWarningFromPercent": 50
+      }
+    }
+  }
+}

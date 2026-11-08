@@ -1,0 +1,194 @@
+[
+  {
+    "id": "35021e63-8dda-442a-bbac-a839330e5405",
+    "name": "EMI",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "cdf60a1f-6a49-456e-b8f3-89496db1185d",
+    "name": "Education",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "e17cfb7c-872a-4e6b-870b-e51ace04e827",
+    "name": "Electricity",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "18c0d690-182d-45e0-948d-e309634320ac",
+    "name": "Entertainment",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+    "name": "Food",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "da915ad2-aa35-4dba-9267-a7f806236199",
+    "name": "Groceries",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "52fb0ea2-2eee-4162-8b58-f35ce8819c5b",
+    "name": "Healthcare",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "1f4bbc70-042a-4fa8-ae18-d1177a49f5eb",
+    "name": "Internet",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "ce992821-9e54-46b9-8ebe-83223482242e",
+    "name": "Investments",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "e1ba769a-34c6-4373-b704-99af2ed3087f",
+    "name": "Miscellaneous",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "aa86659f-01f9-4ad6-9d87-2864efedb342",
+    "name": "Mobile recharge",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "ce18305b-8af7-4211-9872-b1a2032d7662",
+    "name": "Personal",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "62cfd48e-7118-453c-ada5-7b99c3f74f95",
+    "name": "Rent",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "c55d1ba3-bd06-4346-bf09-f778a8ca7ad9",
+    "name": "Shopping",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "8a56d3cd-dcb4-4aa6-8cba-d1e685d86f46",
+    "name": "Subscriptions",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "3be64738-bf31-403b-8078-76629239f233",
+    "name": "Transportation",
+    "kind": "expense",
+    "isEssential": true,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "70f741de-234d-4b72-ad37-2fe269531b1a",
+    "name": "Travel",
+    "kind": "expense",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "dd1840f5-5967-4078-a8b1-cdab81fcd0dd",
+    "name": "Bonus",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "bed94310-8921-4024-8374-d8822133a7f0",
+    "name": "Business",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "f36f0cd2-2cb3-4bcb-86f0-fd5b3ea533dc",
+    "name": "Freelance",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "f5b9c360-761e-4ea5-b209-567aafd4249a",
+    "name": "Gifts",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "119a6871-654c-4caa-853f-ba84dd2d46a4",
+    "name": "Interest",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "b311b207-4c32-4727-9001-0240ef239bb7",
+    "name": "Other income",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  },
+  {
+    "id": "e48e107e-43af-4da6-84c0-088265532863",
+    "name": "Salary",
+    "kind": "income",
+    "isEssential": false,
+    "icon": null,
+    "isCustom": false
+  }
+]

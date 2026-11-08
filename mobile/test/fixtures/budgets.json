@@ -1,0 +1,158 @@
+[
+  {
+    "id": "f68989ad-b9ac-4354-a6e4-4a298ae6bd3a",
+    "name": "Food",
+    "scope": "category",
+    "categoryId": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+    "period": "monthly",
+    "periodDays": null,
+    "amount": "6000.00",
+    "currency": "INR",
+    "startDate": "2026-11-01",
+    "rollover": false,
+    "alertThresholds": [
+      50,
+      75,
+      90,
+      100
+    ],
+    "status": "active",
+    "current": {
+      "asOf": "2026-11-08",
+      "periodStart": "2026-11-01",
+      "periodEnd": "2026-12-01",
+      "transactionsFrom": "2026-11-01T00:00:00+05:30",
+      "transactionsTo": "2026-12-01T00:00:00+05:30",
+      "limit": "6000.00",
+      "carriedOver": "0.00",
+      "spent": "4670.00",
+      "remaining": "1330.00",
+      "utilizationPercent": "77.83",
+      "daysLeft": 23,
+      "dailyTarget": "57.82",
+      "thresholdsReached": [
+        50,
+        75
+      ],
+      "exceeded": false,
+      "health": "warning",
+      "healthWarningFromPercent": 50
+    }
+  },
+  {
+    "id": "be6991a4-7555-4dc9-bb6c-8c709e1a3ec9",
+    "name": "Shopping",
+    "scope": "category",
+    "categoryId": "c55d1ba3-bd06-4346-bf09-f778a8ca7ad9",
+    "period": "monthly",
+    "periodDays": null,
+    "amount": "3000.00",
+    "currency": "INR",
+    "startDate": "2026-11-01",
+    "rollover": false,
+    "alertThresholds": [
+      50,
+      75,
+      90,
+      100
+    ],
+    "status": "active",
+    "current": {
+      "asOf": "2026-11-08",
+      "periodStart": "2026-11-01",
+      "periodEnd": "2026-12-01",
+      "transactionsFrom": "2026-11-01T00:00:00+05:30",
+      "transactionsTo": "2026-12-01T00:00:00+05:30",
+      "limit": "3000.00",
+      "carriedOver": "0.00",
+      "spent": "3480.00",
+      "remaining": "-480.00",
+      "utilizationPercent": "116.00",
+      "daysLeft": 23,
+      "dailyTarget": "0.00",
+      "thresholdsReached": [
+        50,
+        75,
+        90,
+        100
+      ],
+      "exceeded": true,
+      "health": "exceeded",
+      "healthWarningFromPercent": 50
+    }
+  },
+  {
+    "id": "916a6bff-2dcb-4e50-8fe5-cee2ecfed026",
+    "name": "Transport",
+    "scope": "category",
+    "categoryId": "3be64738-bf31-403b-8078-76629239f233",
+    "period": "monthly",
+    "periodDays": null,
+    "amount": "2500.00",
+    "currency": "INR",
+    "startDate": "2026-11-01",
+    "rollover": false,
+    "alertThresholds": [
+      50,
+      75,
+      90,
+      100
+    ],
+    "status": "active",
+    "current": {
+      "asOf": "2026-11-08",
+      "periodStart": "2026-11-01",
+      "periodEnd": "2026-12-01",
+      "transactionsFrom": "2026-11-01T00:00:00+05:30",
+      "transactionsTo": "2026-12-01T00:00:00+05:30",
+      "limit": "2500.00",
+      "carriedOver": "0.00",
+      "spent": "310.00",
+      "remaining": "2190.00",
+      "utilizationPercent": "12.40",
+      "daysLeft": 23,
+      "dailyTarget": "95.21",
+      "thresholdsReached": [],
+      "exceeded": false,
+      "health": "on_track",
+      "healthWarningFromPercent": 50
+    }
+  },
+  {
+    "id": "89fcfd5d-fd84-41f8-b467-c318a7756f78",
+    "name": "All spending",
+    "scope": "overall",
+    "categoryId": null,
+    "period": "monthly",
+    "periodDays": null,
+    "amount": "40000.00",
+    "currency": "INR",
+    "startDate": "2026-11-01",
+    "rollover": false,
+    "alertThresholds": [
+      50,
+      75,
+      90,
+      100
+    ],
+    "status": "active",
+    "current": {
+      "asOf": "2026-11-08",
+      "periodStart": "2026-11-01",
+      "periodEnd": "2026-12-01",
+      "transactionsFrom": "2026-11-01T00:00:00+05:30",
+      "transactionsTo": "2026-12-01T00:00:00+05:30",
+      "limit": "40000.00",
+      "carriedOver": "0.00",
+      "spent": "8460.00",
+      "remaining": "31540.00",
+      "utilizationPercent": "21.15",
+      "daysLeft": 23,
+      "dailyTarget": "1371.30",
+      "thresholdsReached": [],
+      "exceeded": false,
+      "health": "on_track",
+      "healthWarningFromPercent": 50
+    }
+  }
+]

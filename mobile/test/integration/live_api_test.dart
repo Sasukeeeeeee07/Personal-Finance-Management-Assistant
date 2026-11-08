@@ -9,6 +9,7 @@ import 'package:pfm_mobile/core/api/api_error.dart';
 import 'package:pfm_mobile/core/api/token_store.dart';
 import 'package:pfm_mobile/core/money/money.dart';
 import 'package:pfm_mobile/features/auth/data/auth_api.dart';
+import 'package:pfm_mobile/features/dashboard/data/dashboard_api.dart';
 
 const liveUrl = String.fromEnvironment('LIVE_API_URL');
 
@@ -40,6 +41,34 @@ void main() {
     await expectLater(auth.me(), throwsA(isA<ApiError>().having((e) => e.kind, 'kind', ApiErrorKind.unauthorized)));
     expect(expired, 1);
     expect(await store.read(), isNull);
+  }, skip: skip);
+
+  test('every dashboard endpoint parses into typed models from the live backend', () async {
+    final store = MemoryTokenStore();
+    final client = ApiClient(baseUrl: liveUrl, tokens: store);
+    final auth = AuthApi(client);
+    await store.write(await auth.register(fullName: 'Dashboard Test', email: 'dash-${DateTime.now().microsecondsSinceEpoch}@example.com', password: 'sturdy-password-1'));
+    final acct = await client.post<Map<String, dynamic>>('/accounts', body: {'name': 'Bank', 'type': 'savings', 'openingBalance': '30000'});
+    await client.post<dynamic>('/budgets', body: {'name': 'All', 'period': 'monthly', 'amount': '20000'});
+    await client.post<dynamic>('/commitments', body: {'name': 'Rent', 'amount': '8000', 'accountId': acct['id'], 'frequency': 'monthly', 'dueDate': '2099-01-01'});
+    final tx = await client.post<Map<String, dynamic>>('/transactions',
+        body: {'type': 'expense', 'amount': '250', 'accountId': acct['id'], 'merchant': 'Zomato', 'occurredAt': DateTime.now().toUtc().toIso8601String()}, idempotencyKey: ApiClient.newIdempotencyKey());
+
+    final api = DashboardApi(client);
+    final summary = await api.summary();
+    expect(summary.liquidBalance, Money.fromApi('29750.00'));
+    expect(summary.reserved, Money.fromApi('8000.00'));
+    expect(summary.availableToSpend, Money.fromApi('21750.00')); // as computed by the backend
+    expect(summary.upcomingPayments.single.name, 'Rent');
+    expect((await api.budgets()).single.spent, Money.fromApi('250.00'));
+    final forecast = await api.forecast();
+    expect(forecast.availableNow, summary.availableToSpend);
+    final recent = await api.recentTransactions();
+    expect(recent.single.merchant, 'Zomato');
+    expect((await api.transaction((tx['transaction'] as Map)['id'] as String)).item.amount, Money.fromApi('250.00'));
+    final lookups = await api.lookups();
+    expect(lookups.accounts[acct['id']]!.name, 'Bank');
+    expect(lookups.categories.values.map((c) => c.name), contains('Food'));
   }, skip: skip);
 
   test('backend money values are exact decimal strings', () async {

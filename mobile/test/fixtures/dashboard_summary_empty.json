@@ -1,0 +1,30 @@
+{
+  "asOf": "2026-11-08",
+  "currency": "INR",
+  "totalBalance": "0.00",
+  "netPosition": "0.00",
+  "liquidBalance": "0.00",
+  "reserved": "0.00",
+  "allocated": "0.00",
+  "availableToSpend": "0.00",
+  "overcommitted": false,
+  "creditCardOutstanding": "0.00",
+  "monthIncome": "0.00",
+  "monthExpenses": "0.00",
+  "monthNet": "0.00",
+  "needsReviewCount": 0,
+  "savings": "0.00",
+  "monthlyBudget": null,
+  "upcomingPayments": [],
+  "calculation": {
+    "formula": "availableToSpend = liquidBalance − reserved − allocated",
+    "notes": [
+      "Liquid balance includes savings, current, cash, UPI-linked and wallet accounts. Fixed deposits and credit cards are excluded.",
+      "Reserved money is a plan inside this app. It is not blocked or frozen at your bank.",
+      "Transfers between your own accounts are not counted as income or expenses.",
+      "Credit card dues are shown separately. Create a commitment for your card bill to reserve money for it.",
+      "Net position is the total of all your accounts, including fixed deposits, minus credit card dues.",
+      "Allocated is money saved in goals set to reserve, except goals kept in a non-liquid account such as a fixed deposit. Track-only goals are not subtracted."
+    ]
+  }
+}

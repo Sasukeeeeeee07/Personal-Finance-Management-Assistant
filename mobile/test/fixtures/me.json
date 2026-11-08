@@ -1,0 +1,24 @@
+{
+  "id": "84a96c7c-987e-487a-aaa6-268fef6d80c7",
+  "email": "demo-1794127563665@example.test",
+  "fullName": "Asha Verma",
+  "emailVerified": false,
+  "platformRole": null,
+  "activeOrganizationId": "5f714d6a-2e5e-4233-a8cc-303666820a61",
+  "organizations": [
+    {
+      "id": "5f714d6a-2e5e-4233-a8cc-303666820a61",
+      "name": "Asha Verma's finances",
+      "type": "personal",
+      "plan": "free",
+      "role": "org_admin"
+    }
+  ],
+  "permissions": [
+    "finance.own.write",
+    "org.members.read",
+    "org.members.manage",
+    "finance.own.read",
+    "org.reports.read"
+  ]
+}

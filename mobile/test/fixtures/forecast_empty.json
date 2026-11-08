@@ -1,0 +1,66 @@
+{
+  "methodVersion": "forecast-v2",
+  "asOf": "2026-11-08",
+  "calculatedAt": "2026-11-08T08:46:04.871Z",
+  "monthEnd": "2026-11-30",
+  "daysLeft": 22,
+  "currency": "INR",
+  "startingLiquidBalance": "0.00",
+  "expectedIncome": {
+    "total": "0.00",
+    "items": []
+  },
+  "scheduledPayments": {
+    "total": "0.00",
+    "items": []
+  },
+  "expectedRecurringExpenses": {
+    "total": "0.00",
+    "items": []
+  },
+  "variableSpending": {
+    "total": "0.00",
+    "dailyAverage": "0.00",
+    "method": "no_history",
+    "historyDays": 0,
+    "windows": [
+      {
+        "label": "last_7_days",
+        "coveredDays": 0,
+        "total": "0.00",
+        "dailyAverage": "0.00",
+        "weight": 0
+      },
+      {
+        "label": "days_8_to_30",
+        "coveredDays": 0,
+        "total": "0.00",
+        "dailyAverage": "0.00",
+        "weight": 0
+      },
+      {
+        "label": "days_31_to_90",
+        "coveredDays": 0,
+        "total": "0.00",
+        "dailyAverage": "0.00",
+        "weight": 0
+      }
+    ]
+  },
+  "estimatedMonthEndBalance": "0.00",
+  "estimatedAvailableAtMonthEnd": "0.00",
+  "availableNow": "0.00",
+  "availableChangeByMonthEnd": "0.00",
+  "shortfallRisk": false,
+  "confidence": "low",
+  "formula": "startingLiquidBalance + expectedIncome − scheduledPayments − expectedRecurringExpenses − variableSpending",
+  "assumptions": [
+    "Starting balance is your liquid balance at the end of 2026-11-08 (savings, current, cash, UPI-linked and wallet accounts). Fixed deposits and credit cards are not included.",
+    "Every reservation that was open on that date and falls due this month is paid in full on its due date; overdue ones are assumed paid on the forecast date.",
+    "Recurring income and expenses are items you marked as recurring last month that have not occurred yet this month. They are expected on the same day of the month.",
+    "Recurring expenses that match a commitment are counted once, as scheduled payments.",
+    "No spending history yet, so day-to-day spending is assumed to be ₹0. The forecast will improve as you record expenses.",
+    "Planned spending, recurring items and reservation payments are excluded from day-to-day spending so they are not counted twice.",
+    "Goal savings and future reservations are not spent; they reduce what is available, not your balance."
+  ]
+}

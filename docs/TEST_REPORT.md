@@ -2,7 +2,36 @@
 
 Only runs that were actually executed are recorded here.
 
-## Latest run — 2026-11-08 (review gate + Flutter foundation)
+## Latest run — 2026-11-08 (Flutter step 2: Dashboard)
+
+| Environment | Command | Result |
+|---|---|---|
+| Backend · PGlite | `npm test` | **113 / 113 passed** |
+| Backend · real PostgreSQL 17.11 (UTF-8, local) | `TEST_DATABASE_URL=… npm test` | **113 / 113 passed** |
+| Mobile · `flutter analyze` | | No issues |
+| Mobile · `flutter test` | | **38 passed**, 3 skipped (live tests need a backend URL) |
+| Mobile · live API integration against the running backend | `flutter test test/integration --dart-define=LIVE_API_URL=http://localhost:4000/api/v1` | **3 / 3 passed** |
+| Mobile · web release build + walkthrough at 375×812 and 1280×860, light and dark | `flutter build web --release` | Screenshots `docs/screenshots/11–23` |
+| Mobile · Android debug APK (clean build) | `flutter clean && flutter build apk --debug` | **Succeeded** — 150.7 MB `app-debug.apk` |
+| Android emulator run | — | **Not run** (cmdline-tools missing, KI-017) |
+| GitHub Actions | — | **Not run** (no remote, KI-001) |
+
+### New backend tests (+9)
+`test/response-contract.e2e-spec.ts` — every dashboard endpoint has a documented 200 schema; real responses for a populated account and a brand-new account validate against the **frozen** contract (no undocumented fields, money/date patterns, required fields); `netPosition` value check; `availableNow` equals the dashboard's `availableToSpend`; the 10 Flutter fixture files validate; a negative test proves the validator rejects money-as-number, wrong decimals, extra fields and missing fields.
+
+### New mobile tests (+14)
+| Suite | Tests | Covers |
+|---|---|---|
+| `test/features/dashboard_models_test.dart` | 5 | Parsing real fixtures exactly (decimal strings preserved), empty-account nulls, all endpoint models, **forecast breakdown terms add up to the backend estimate**, money-as-number and malformed strings rejected |
+| `test/features/dashboard_test.dart` | 9 | All five sections render backend figures; dashboard sends only GETs; calculation explanation sheet; empty states; one failing section isolated and retryable; offline refresh keeps last figures with notices; Refresh button reloads every section; recent transaction → detail; dark theme + wide layout (navigation rail, two columns); tap-target, labelled tap-target and **text-contrast** accessibility guidelines |
+| `test/integration/live_api_test.dart` | +1 live | Every dashboard endpoint parsed into typed models from the live backend; available-to-spend equals the backend value |
+| `test/features/auth_flow_test.dart` | 9 (updated) | Sign-in now lands on the dashboard; profile reached via the bottom bar; redirect rule covers the detail route |
+
+### Defects found in this step
+1. **Forecast breakdown did not add up** (missing "recurring expenses" line) — found by checking the screenshot against backend figures; fixed; regression test added.
+2. **Pull-to-refresh unavailable with a mouse/keyboard on web/desktop** — found in the browser walkthrough; Refresh button added; test added.
+
+## Previous run — 2026-11-08 (review gate + Flutter foundation)
 
 | Environment | Command | Result |
 |---|---|---|

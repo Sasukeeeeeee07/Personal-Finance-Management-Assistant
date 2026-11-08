@@ -10,9 +10,11 @@ Severity: **High** (wrong numbers or security exposure possible), **Medium** (in
 | KI-002 | Medium | Email | Mailer only logs messages; no delivery, retry or queue. | Priority 5 (SMTP + BullMQ, outbox D-021). |
 | KI-003 | Medium | Auth | Google Sign-In untested with real Google tokens; not wired in the Flutter app yet. | Needs OAuth client IDs. |
 | KI-004 | Medium | Security | No Postgres row-level security; isolation relies on owner filtering (covered by tests). | Evaluated in D-022; Priority 8 behind a flag. |
-| KI-016 | Medium | API contract | OpenAPI describes request bodies but not response bodies; Flutter models are hand-written and checked by live integration tests. | Add response schemas per module, starting with the dashboard. |
+| KI-016 | Low | API contract | Response schemas exist for the 10 dashboard endpoints (enforced by tests); reservations, commitments, goals and write endpoints are still undocumented. | Add with each Flutter module. |
 | KI-017 | Medium | Mobile | Not yet run on an Android emulator/device or iOS; validated on Flutter web and with widget/integration tests. | Run on emulator once Android cmdline-tools are installed; iOS needs macOS. |
 | KI-018 | Medium | Mobile | No biometric unlock yet (optional in spec). | Add with `local_auth` in the profile/settings module. |
+| KI-021 | Low | Tooling | Incremental `flutter build apk` fails on this machine because the project path contains spaces (`Failed to create parent directory 'C:\Users\win'`); a clean build (`flutter clean`) succeeds. CI paths have no spaces. | Move the project to a path without spaces, or keep using clean builds locally. |
+| KI-022 | Low | Mobile | Dashboard figures are kept in memory only; after a cold start while offline the app shows the offline screen instead of last-known figures. | Decide whether to persist an encrypted snapshot (HANDOFF-004 question 4). |
 | KI-006 | Low | Forecast | Historical forecasts are rebuilt from current records: reservations cancelled by a later payment reversal are approximated by `closed_at`. | Acceptable for v1; documented in the response assumptions. |
 | KI-007 | Low | Forecast | Expected recurring income/expenses rely on transactions marked recurring; no recurring schedules yet. | Recurring schedules (Phase 3 backlog). |
 | KI-008 | Low | Budgets | Alerts are evaluated for the current period only. | By design. |

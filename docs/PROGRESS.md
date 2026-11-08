@@ -4,40 +4,38 @@ Last updated: 2026-11-08 · Evidence for every "tested" claim is in [TEST_REPORT
 
 ## Completed (tested)
 
-### Backend — Phases 1–3
-- [x] Auth, sessions, RBAC, per-user isolation (Phase 1)
-- [x] Accounts, ledger, transfers, credit cards, dedup, audit (Phase 2)
-- [x] Money Lock, budgets, goals, forecast, dashboard (Phase 3)
+### Backend — Phases 1–3 and review gate
+- [x] Auth, sessions, RBAC, per-user isolation
+- [x] Accounts, ledger, transfers, credit cards, dedup, audit
+- [x] Money Lock (with reversible settlements), budgets, goals (opt-in allocation), forecast v2, dashboard
+- [x] API contract v1 frozen; uniform errors; idempotency keys; sorting
+- [x] **Response schemas** for the 10 dashboard endpoints, enforced by a response contract test that also validates the Flutter fixtures
+- [x] Server-computed `netPosition`, `availableNow`, `availableChangeByMonthEnd`
+- [x] 113 backend tests pass on PGlite and on real PostgreSQL 17.11
 
-### Review gate (ChatGPT, Priority 3 gate)
-- [x] B1 Reservation lifecycle: occurrence identity, settlement links, successor tracking, reversal restores state, DB uniqueness, concurrency + failure rollback tests
-- [x] B2 Goal allocation opt-in (`track_only` default / `reserve`), linked transfers, reversals
-- [x] B3 Budget health from the lowest threshold; events separate and idempotent
-- [x] B4 Tracking start date; manual back-dating rejected; explicit historical imports
-- [x] B5 Forecast v2: as-of correctness, 50/30/20 weighting (configurable), no double counting, method metadata
-- [x] B6 Outbox design recorded (D-021); budgets already independent of delivery
-- [x] B7 RLS evaluated (D-022), deferred
-- [x] E API contract: uniform errors, sorting, idempotency keys, frozen OpenAPI + snapshot test (docs/API_CONTRACT.md)
-- [x] 104 backend tests pass on PGlite and on real PostgreSQL 17.11
+### Flutter
+- [x] Step 1 — foundation and authentication (approved in the HANDOFF-003 review)
+- [x] Step 2 — **Dashboard** (awaiting review): financial summary, budgets, Money Lock, forecast, recent transactions, read-only transaction detail; loading, empty, error, stale and offline states; pull-to-refresh and Refresh button; light/dark; phone and wide layouts
+- [x] 38 widget/unit tests + 3 live API integration tests
 
-### Flutter — step 1: foundation and authentication
-- [x] Project (`mobile/`), Material 3 light/dark theme with design tokens
-- [x] `ApiClient`: single-flight refresh rotation, one retry on 401, timeouts, cancellation, structured `ApiError`, idempotency keys
-- [x] Secure token storage; `Money` with exact decimals and Indian grouping
-- [x] Sign in, register (server field errors on fields), forgot password, session restore, offline state, profile with email verification, sign out (this device / all devices)
-- [x] 24 widget/unit tests + 2 live API integration tests; web build walkthrough with screenshots
+## Infrastructure validation (tracked separately; only executed results count)
 
-## Next (in order)
-1. Flutter step 2 — **Dashboard** (needs response schema for `/dashboard/summary`, KI-016) with bottom navigation and quick-add
-2. Flutter step 3 — Transactions (list with sort/paging, add/edit, offline queue with idempotency keys — pending entries never shown as confirmed)
-3. Flutter step 4 — Money Lock (commitments, reservations, settlement, reversal UI)
-4. Flutter steps 5–7 — Budgets, Goals, Profile/settings (biometric unlock)
-5. Next.js dashboard, SMTP + Firebase (outbox), ingestion, insights/Ollama, SaaS, production hardening
+| Item | Status | Evidence |
+|---|---|---|
+| GitHub remote setup | **Not done** | No remote configured; needs the product owner |
+| PostgreSQL 16 CI verification | **Not done** | Workflow ready (`.github/workflows/ci.yml`) but never run — depends on the remote. Real Postgres validated on **17.11 locally** only |
+| Flutter Android debug APK build | **Done** | `flutter build apk --debug` (clean build) succeeded on 2026-11-08 with the dashboard code: `build/app/outputs/flutter-apk/app-debug.apk`, 150.7 MB. Incremental builds fail locally because of spaces in the path (KI-021) |
+| Android emulator runtime verification | **Not done** | Android SDK `cmdline-tools` missing; app not yet launched on an emulator or device (KI-017) |
+
+## Next (blocked on review)
+- Dashboard review and approval (HANDOFF-004). **Transactions module not started**, as instructed.
+- Then: Flutter step 3 — Transactions (list, add/edit, offline queue with idempotency keys), adding the Transactions tab and quick-add button.
 
 ## Blocked / needs the product owner
-- **GitHub remote** — needed for CI (PostgreSQL 16 + Flutter jobs).
-- **Android cmdline-tools** (Android Studio → SDK Manager → SDK Tools) to run on an emulator; macOS for iOS builds.
+- GitHub remote (unblocks CI on PostgreSQL 16 and Flutter).
+- Android cmdline-tools (Android Studio → SDK Manager → SDK Tools → "Android SDK Command-line Tools") for emulator runs; macOS for iOS.
 - SMTP credentials, Firebase project, Google OAuth client IDs, AA partner, Razorpay (later priorities).
+- Answers to HANDOFF-004 questions.
 
 ## Production blockers (not production-ready)
-CI on PostgreSQL 16 · RLS / encryption at rest · email and push delivery tests · device testing (Android, iOS) · backup/restore drill · monitoring · load testing · data export and account deletion · consent records · security review.
+CI on PostgreSQL 16 · RLS / encryption at rest · email and push delivery tests · device testing (Android emulator/device, iOS) · backup/restore drill · monitoring · load testing · data export and account deletion · consent records · security review.

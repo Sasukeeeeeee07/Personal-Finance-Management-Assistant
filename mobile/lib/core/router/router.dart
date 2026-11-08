@@ -7,7 +7,10 @@ import '../../features/auth/ui/forgot_password_screen.dart';
 import '../../features/auth/ui/register_screen.dart';
 import '../../features/auth/ui/sign_in_screen.dart';
 import '../../features/auth/ui/status_screens.dart';
+import '../../features/dashboard/ui/dashboard_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/shell/home_shell.dart';
+import '../../features/transactions/ui/transaction_detail_screen.dart';
 
 abstract final class Routes {
   static const restoring = '/loading';
@@ -16,8 +19,8 @@ abstract final class Routes {
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
 
-  /// First signed-in screen until the dashboard module lands (next step).
-  static const home = '/profile';
+  static const home = '/dashboard';
+  static const profile = '/profile';
 
   static const publicRoutes = {signIn, register, forgotPassword};
 }
@@ -53,7 +56,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.signIn, builder: (_, __) => const SignInScreen()),
       GoRoute(path: Routes.register, builder: (_, __) => const RegisterScreen()),
       GoRoute(path: Routes.forgotPassword, builder: (_, __) => const ForgotPasswordScreen()),
-      GoRoute(path: Routes.home, builder: (_, __) => const ProfileScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (_, __, shell) => HomeShell(shell: shell),
+        branches: [
+          StatefulShellBranch(routes: [GoRoute(path: Routes.home, builder: (_, __) => const DashboardScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: Routes.profile, builder: (_, __) => const ProfileScreen())]),
+        ],
+      ),
+      GoRoute(path: '/transactions/:id', builder: (_, state) => TransactionDetailScreen(id: state.pathParameters['id']!)),
     ],
   );
 });

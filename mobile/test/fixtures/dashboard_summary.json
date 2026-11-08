@@ -1,0 +1,74 @@
+{
+  "asOf": "2026-11-08",
+  "currency": "INR",
+  "totalBalance": "321110.00",
+  "netPosition": "315741.00",
+  "liquidBalance": "171110.00",
+  "reserved": "25399.00",
+  "allocated": "24000.00",
+  "availableToSpend": "121711.00",
+  "overcommitted": false,
+  "creditCardOutstanding": "5369.00",
+  "monthIncome": "68000.00",
+  "monthExpenses": "8460.00",
+  "monthNet": "59540.00",
+  "needsReviewCount": 0,
+  "savings": "30000.00",
+  "monthlyBudget": {
+    "budgetId": "89fcfd5d-fd84-41f8-b467-c318a7756f78",
+    "limit": "40000.00",
+    "spent": "8460.00",
+    "remaining": "31540.00",
+    "utilizationPercent": "21.15",
+    "dailyTarget": "1371.30"
+  },
+  "upcomingPayments": [
+    {
+      "reservationId": "b90e7fff-93d1-408a-bf1b-1091022e3667",
+      "name": "Airtel Fiber",
+      "amount": "999.00",
+      "reserved": "999.00",
+      "dueDate": "2026-11-06",
+      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "overdue": true
+    },
+    {
+      "reservationId": "af2db2eb-2dcb-43eb-8d28-e402cbfc8d06",
+      "name": "Electricity",
+      "amount": "1400.00",
+      "reserved": "1400.00",
+      "dueDate": "2026-11-12",
+      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "overdue": false
+    },
+    {
+      "reservationId": "a2a2dd14-8166-45e2-be06-94221a78115a",
+      "name": "Rent",
+      "amount": "18000.00",
+      "reserved": "18000.00",
+      "dueDate": "2026-11-20",
+      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "overdue": false
+    },
+    {
+      "reservationId": "c4f04ac6-9f5b-49d9-9e92-b2d4afa86024",
+      "name": "Car EMI",
+      "amount": "9500.00",
+      "reserved": "5000.00",
+      "dueDate": "2026-11-26",
+      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "overdue": false
+    }
+  ],
+  "calculation": {
+    "formula": "availableToSpend = liquidBalance − reserved − allocated",
+    "notes": [
+      "Liquid balance includes savings, current, cash, UPI-linked and wallet accounts. Fixed deposits and credit cards are excluded.",
+      "Reserved money is a plan inside this app. It is not blocked or frozen at your bank.",
+      "Transfers between your own accounts are not counted as income or expenses.",
+      "Credit card dues are shown separately. Create a commitment for your card bill to reserve money for it.",
+      "Net position is the total of all your accounts, including fixed deposits, minus credit card dues.",
+      "Allocated is money saved in goals set to reserve, except goals kept in a non-liquid account such as a fixed deposit. Track-only goals are not subtracted."
+    ]
+  }
+}
