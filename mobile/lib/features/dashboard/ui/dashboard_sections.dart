@@ -28,7 +28,10 @@ class AmountTile extends StatelessWidget {
         children: [
           Text(label, style: text.bodySmall?.copyWith(color: muted)),
           const SizedBox(height: 2),
-          Text(amount.format(), style: (emphasis ? text.titleLarge : text.titleMedium)?.copyWith(fontWeight: FontWeight.w600, color: color)),
+          Text(
+            amount.format(),
+            style: (emphasis ? text.titleLarge : text.titleMedium)?.copyWith(fontWeight: FontWeight.w600, color: color),
+          ),
           if (caption != null) Text(caption!, style: text.bodySmall?.copyWith(color: muted)),
         ],
       ),
@@ -57,7 +60,13 @@ class AvailableHero extends StatelessWidget {
             for (final note in summary.calculationNotes)
               Padding(
                 padding: const EdgeInsets.only(bottom: Space.sm),
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('•  '), Expanded(child: Text(note))]),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('•  '),
+                    Expanded(child: Text(note)),
+                  ],
+                ),
               ),
           ],
         ),
@@ -89,18 +98,28 @@ class AvailableHero extends StatelessWidget {
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
-                    child: Text(summary.availableToSpend.format(), style: text.displaySmall?.copyWith(color: onHero, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      summary.availableToSpend.format(),
+                      style: text.displaySmall?.copyWith(color: onHero, fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
             ),
             if (summary.overcommitted) ...[
               const SizedBox(height: Space.sm),
-              Row(children: [
-                Icon(Icons.warning_amber_rounded, size: 18, color: scheme.error),
-                const SizedBox(width: Space.xs),
-                Expanded(child: Text('Your commitments are more than the money you have.', style: text.bodyMedium?.copyWith(color: onHero, fontWeight: FontWeight.w600))),
-              ]),
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, size: 18, color: scheme.error),
+                  const SizedBox(width: Space.xs),
+                  Expanded(
+                    child: Text(
+                      'Your commitments are more than the money you have.',
+                      style: text.bodyMedium?.copyWith(color: onHero, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
             ],
             const SizedBox(height: Space.lg),
             _HeroRow(label: 'Liquid balance', amount: summary.liquidBalance, color: onHero),
@@ -136,10 +155,12 @@ class _HeroRow extends StatelessWidget {
     return MergeSemantics(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(children: [
-          Expanded(child: Text(minus ? '− $label' : label, style: style)),
-          Text(amount.format(), style: style?.copyWith(fontWeight: FontWeight.w600)),
-        ]),
+        child: Row(
+          children: [
+            Expanded(child: Text(minus ? '− $label' : label, style: style)),
+            Text(amount.format(), style: style?.copyWith(fontWeight: FontWeight.w600)),
+          ],
+        ),
       ),
     );
   }
@@ -165,26 +186,35 @@ class MoneyOverview extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LayoutBuilder(builder: (context, c) {
-          final columns = c.maxWidth >= 480 ? 3 : 2;
-          final width = (c.maxWidth - Space.lg * (columns - 1)) / columns;
-          return Wrap(spacing: Space.lg, runSpacing: Space.lg, children: [for (final t in tiles) SizedBox(width: width, child: t)]);
-        }),
+        LayoutBuilder(
+          builder: (context, c) {
+            final columns = c.maxWidth >= 480 ? 3 : 2;
+            final width = (c.maxWidth - Space.lg * (columns - 1)) / columns;
+            return Wrap(
+              spacing: Space.lg,
+              runSpacing: Space.lg,
+              children: [for (final t in tiles) SizedBox(width: width, child: t)],
+            );
+          },
+        ),
         if (hasCardDues) ...[
           const SizedBox(height: Space.lg),
           // Review decision D-006: unreserved card dues are shown prominently and are not subtracted automatically.
           Container(
             padding: const EdgeInsets.all(Space.md),
             decoration: BoxDecoration(color: fc.warning.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(Radii.md)),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.credit_card, size: 20, color: fc.warning),
-              const SizedBox(width: Space.sm),
-              Expanded(
-                child: Text(
-                  'You owe ${summary.creditCardOutstanding.format()} on credit cards. It isn’t taken out of available-to-spend — reserve money for the bill with a commitment.',
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.credit_card, size: 20, color: fc.warning),
+                const SizedBox(width: Space.sm),
+                Expanded(
+                  child: Text(
+                    'You owe ${summary.creditCardOutstanding.format()} on credit cards. It isn’t taken out of available-to-spend — reserve money for the bill with a commitment.',
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ],
         if (summary.needsReviewCount > 0) ...[
@@ -202,7 +232,16 @@ class MoneyOverview extends StatelessWidget {
 // --- 2. Budgets ---------------------------------------------------------------------------------
 
 class BudgetBar extends StatelessWidget {
-  const BudgetBar({super.key, required this.label, required this.spent, required this.limit, required this.remaining, required this.percent, required this.health, this.subtitle});
+  const BudgetBar({
+    super.key,
+    required this.label,
+    required this.spent,
+    required this.limit,
+    required this.remaining,
+    required this.percent,
+    required this.health,
+    this.subtitle,
+  });
 
   final String label;
   final Money spent;
@@ -231,10 +270,14 @@ class BudgetBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(children: [
-            Expanded(child: Text(label, style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500))),
-            Text('${spent.format(decimals: false)} of ${limit.format(decimals: false)}', style: text.bodyMedium),
-          ]),
+          Row(
+            children: [
+              Expanded(
+                child: Text(label, style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w500)),
+              ),
+              Text('${spent.format(decimals: false)} of ${limit.format(decimals: false)}', style: text.bodyMedium),
+            ],
+          ),
           const SizedBox(height: Space.xs),
           Semantics(
             value: '${Fmt.percent(percent)} used',
@@ -244,11 +287,18 @@ class BudgetBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Space.xs),
-          Row(children: [
-            if (health != BudgetHealth.onTrack) ...[Icon(health == BudgetHealth.exceeded ? Icons.error_outline : Icons.warning_amber_rounded, size: 16, color: color), const SizedBox(width: Space.xs)],
-            Expanded(child: Text(status, style: text.bodySmall?.copyWith(color: health == BudgetHealth.onTrack ? scheme.onSurfaceVariant : color))),
-            if (subtitle != null) Text(subtitle!, style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-          ]),
+          Row(
+            children: [
+              if (health != BudgetHealth.onTrack) ...[
+                Icon(health == BudgetHealth.exceeded ? Icons.error_outline : Icons.warning_amber_rounded, size: 16, color: color),
+                const SizedBox(width: Space.xs),
+              ],
+              Expanded(
+                child: Text(status, style: text.bodySmall?.copyWith(color: health == BudgetHealth.onTrack ? scheme.onSurfaceVariant : color)),
+              ),
+              if (subtitle != null) Text(subtitle!, style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+            ],
+          ),
         ],
       ),
     );
@@ -271,10 +321,10 @@ class BudgetOverview extends StatelessWidget {
     final categoryBudgets = budgets.where((b) => !b.isOverall).toList()..sort((a, b) => b.health.index.compareTo(a.health.index));
     String nameOf(BudgetStatus b) => b.categoryId != null ? (categories[b.categoryId]?.name ?? b.name) : b.name;
     String periodOf(BudgetStatus b) => switch (b.period) {
-          'monthly' => '${b.daysLeft} ${b.daysLeft == 1 ? 'day' : 'days'} left',
-          'weekly' => 'This week',
-          _ => 'This period',
-        };
+      'monthly' => '${b.daysLeft} ${b.daysLeft == 1 ? 'day' : 'days'} left',
+      'weekly' => 'This week',
+      _ => 'This period',
+    };
     final rows = [...overall, ...categoryBudgets];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -312,7 +362,10 @@ class MoneyLockOverview extends StatelessWidget {
   Widget build(BuildContext context) {
     final payments = summary.upcomingPayments;
     if (payments.isEmpty) {
-      return const _Empty(icon: Icons.lock_clock_outlined, text: 'No upcoming commitments. Rent, EMIs and bills you add will be reserved here before they’re due.');
+      return const _Empty(
+        icon: Icons.lock_clock_outlined,
+        text: 'No upcoming commitments. Rent, EMIs and bills you add will be reserved here before they’re due.',
+      );
     }
     final fc = _fc(context);
     final text = Theme.of(context).textTheme;
@@ -323,11 +376,16 @@ class MoneyLockOverview extends StatelessWidget {
         Text('${summary.reserved.format()} reserved for upcoming payments. This money is planned, not blocked at your bank.', style: text.bodySmall),
         if (overdue > 0) ...[
           const SizedBox(height: Space.sm),
-          Row(children: [
-            Icon(Icons.error_outline, size: 18, color: fc.negative),
-            const SizedBox(width: Space.xs),
-            Text('$overdue overdue', style: text.bodyMedium?.copyWith(color: fc.negative, fontWeight: FontWeight.w600)),
-          ]),
+          Row(
+            children: [
+              Icon(Icons.error_outline, size: 18, color: fc.negative),
+              const SizedBox(width: Space.xs),
+              Text(
+                '$overdue overdue',
+                style: text.bodyMedium?.copyWith(color: fc.negative, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
         ],
         const SizedBox(height: Space.sm),
         for (final p in payments)
@@ -374,36 +432,48 @@ class ForecastOverview extends StatelessWidget {
     final changeText = change.isZero
         ? 'about the same as you can spend now'
         : change.isNegative
-            ? '${change.abs().format()} less than you can spend now'
-            : '${change.format()} more than you can spend now';
+        ? '${change.abs().format()} less than you can spend now'
+        : '${change.format()} more than you can spend now';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(
-            child: AmountTile(
-              label: 'Expected balance on ${Fmt.day(forecast.monthEnd)}',
-              amount: forecast.estimatedMonthEndBalance,
-              emphasis: true,
-              color: forecast.shortfallRisk ? fc.negative : null,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: AmountTile(
+                label: 'Expected balance on ${Fmt.day(forecast.monthEnd)}',
+                amount: forecast.estimatedMonthEndBalance,
+                emphasis: true,
+                color: forecast.shortfallRisk ? fc.negative : null,
+              ),
             ),
-          ),
-          Chip(
-            label: Text('${forecast.confidence[0].toUpperCase()}${forecast.confidence.substring(1)} confidence'),
-            visualDensity: VisualDensity.compact,
-            side: BorderSide(color: scheme.outlineVariant),
-          ),
-        ]),
+            Chip(
+              label: Text('${forecast.confidence[0].toUpperCase()}${forecast.confidence.substring(1)} confidence'),
+              visualDensity: VisualDensity.compact,
+              side: BorderSide(color: scheme.outlineVariant),
+            ),
+          ],
+        ),
         const SizedBox(height: Space.md),
-        Row(children: [
-          Expanded(child: AmountTile(label: 'Available now', amount: forecast.availableNow)),
-          Expanded(child: AmountTile(label: 'Available at month end', amount: forecast.estimatedAvailableAtMonthEnd)),
-        ]),
+        Row(
+          children: [
+            Expanded(
+              child: AmountTile(label: 'Available now', amount: forecast.availableNow),
+            ),
+            Expanded(
+              child: AmountTile(label: 'Available at month end', amount: forecast.estimatedAvailableAtMonthEnd),
+            ),
+          ],
+        ),
         const SizedBox(height: Space.sm),
         Text('That’s $changeText.', style: text.bodyMedium?.copyWith(color: change.isNegative ? fc.warning : null)),
         if (forecast.shortfallRisk) ...[
           const SizedBox(height: Space.sm),
-          Text('At this pace you may run short before the month ends.', style: text.bodyMedium?.copyWith(color: fc.negative, fontWeight: FontWeight.w600)),
+          Text(
+            'At this pace you may run short before the month ends.',
+            style: text.bodyMedium?.copyWith(color: fc.negative, fontWeight: FontWeight.w600),
+          ),
         ],
         Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -424,7 +494,13 @@ class ForecastOverview extends StatelessWidget {
               for (final a in forecast.assumptions)
                 Padding(
                   padding: const EdgeInsets.only(bottom: Space.xs),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('•  '), Expanded(child: Text(a, style: text.bodySmall))]),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('•  '),
+                      Expanded(child: Text(a, style: text.bodySmall)),
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -449,10 +525,12 @@ class _ForecastLine extends StatelessWidget {
     return MergeSemantics(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 1),
-        child: Row(children: [
-          Expanded(child: Text(plain ? label : (minus ? '− $label' : '+ $label'), style: style)),
-          Text(amount.format(), style: style),
-        ]),
+        child: Row(
+          children: [
+            Expanded(child: Text(plain ? label : (minus ? '− $label' : '+ $label'), style: style)),
+            Text(amount.format(), style: style),
+          ],
+        ),
       ),
     );
   }
@@ -479,15 +557,21 @@ class TransactionRow extends StatelessWidget {
     final (icon, color, sign) = tx.isIncome
         ? (Icons.south_west, fc.positive, '+')
         : tx.isExpense
-            ? (Icons.north_east, scheme.onSurface, '−')
-            : (Icons.swap_horiz, scheme.onSurfaceVariant, '');
+        ? (Icons.north_east, scheme.onSurface, '−')
+        : (Icons.swap_horiz, scheme.onSurfaceVariant, '');
     return MergeSemantics(
       child: ListTile(
         contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(backgroundColor: scheme.surfaceContainerHighest, child: Icon(icon, size: 20, color: color)),
+        leading: CircleAvatar(
+          backgroundColor: scheme.surfaceContainerHighest,
+          child: Icon(icon, size: 20, color: color),
+        ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: Text('$sign${tx.amount.format()}', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: tx.isIncome ? fc.positive : null)),
+        trailing: Text(
+          '$sign${tx.amount.format()}',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600, color: tx.isIncome ? fc.positive : null),
+        ),
         onTap: () => context.push('/transactions/${tx.id}'),
       ),
     );
@@ -505,7 +589,9 @@ class RecentTransactions extends StatelessWidget {
     if (items.isEmpty) {
       return const _Empty(icon: Icons.receipt_long_outlined, text: 'No transactions yet. Income and expenses you record will appear here.');
     }
-    return Column(children: [for (final t in items) TransactionRow(tx: t, lookups: lookups)]);
+    return Column(
+      children: [for (final t in items) TransactionRow(tx: t, lookups: lookups)],
+    );
   }
 }
 
@@ -518,10 +604,15 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muted = Theme.of(context).colorScheme.onSurfaceVariant;
-    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Icon(icon, color: muted),
-      const SizedBox(width: Space.md),
-      Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: muted))),
-    ]);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: muted),
+        const SizedBox(width: Space.md),
+        Expanded(
+          child: Text(text, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: muted)),
+        ),
+      ],
+    );
   }
 }

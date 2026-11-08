@@ -78,7 +78,10 @@ void main() {
   testWidgets('one failing section does not blank the others, and can be retried', (tester) async {
     final backend = FakeBackend();
     serveDashboard(backend);
-    backend.responses['/forecast/month-end'] = (500, {'statusCode': 500, 'code': 'internal_error', 'message': 'Something went wrong on our side. Please try again.'});
+    backend.responses['/forecast/month-end'] = (
+      500,
+      {'statusCode': 500, 'code': 'internal_error', 'message': 'Something went wrong on our side. Please try again.'},
+    );
     await pumpApp(tester, stored: signedInTokens, backend: backend);
     expect(find.text('Available to spend'), findsOneWidget);
     await scrollTo(tester, find.text('Something went wrong on our side. Please try again.'));
@@ -123,7 +126,13 @@ void main() {
     // Put the fixture detail first in the recent list so it is the one tapped.
     final list = fixtureMap('transactions_recent.json');
     final items = (list['items'] as List).cast<Map<String, dynamic>>();
-    backend.responses['/transactions'] = (200, {...list, 'items': [items.firstWhere((t) => t['id'] == detail['id']), ...items.where((t) => t['id'] != detail['id'])]});
+    backend.responses['/transactions'] = (
+      200,
+      {
+        ...list,
+        'items': [items.firstWhere((t) => t['id'] == detail['id']), ...items.where((t) => t['id'] != detail['id'])],
+      },
+    );
     await pumpApp(tester, stored: signedInTokens, backend: backend);
     final row = find.text(detail['merchant'] as String).first;
     await scrollTo(tester, row);

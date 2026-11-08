@@ -11,8 +11,10 @@ class RestoringScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(child: Semantics(label: 'Loading your account', child: const CircularProgressIndicator())),
-      );
+    body: Center(
+      child: Semantics(label: 'Loading your account', child: const CircularProgressIndicator()),
+    ),
+  );
 }
 
 /// Tokens exist but the server can't be reached. Nothing financial is shown unverified.
@@ -43,10 +45,7 @@ class _OfflineScreenState extends ConsumerState<OfflineScreen> {
           const SizedBox(height: Space.xl),
           PrimaryButton(label: 'Try again', busy: _busy, onPressed: _retry),
           const SizedBox(height: Space.md),
-          OutlinedButton(
-            onPressed: _busy ? null : () => ref.read(authControllerProvider.notifier).signOut(),
-            child: const Text('Sign out'),
-          ),
+          OutlinedButton(onPressed: _busy ? null : () => ref.read(authControllerProvider.notifier).signOut(), child: const Text('Sign out')),
         ],
       ),
     );

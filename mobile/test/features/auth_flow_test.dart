@@ -64,7 +64,10 @@ void main() {
     final (backend, _) = await pumpApp(tester);
     await tester.tap(find.text('Create an account'));
     await tester.pumpAndSettle();
-    backend.responses['/auth/register'] = (409, {'statusCode': 409, 'code': 'email_taken', 'message': 'An account with this email already exists. Sign in instead.'});
+    backend.responses['/auth/register'] = (
+      409,
+      {'statusCode': 409, 'code': 'email_taken', 'message': 'An account with this email already exists. Sign in instead.'},
+    );
     await tester.enterText(find.byKey(const Key('register.name')), 'Asha');
     await tester.enterText(find.byKey(const Key('register.email')), 'asha@example.com');
     await tester.enterText(find.byKey(const Key('register.password')), 'sturdy-password-1');

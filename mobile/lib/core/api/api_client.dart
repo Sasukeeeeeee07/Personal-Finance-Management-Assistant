@@ -66,13 +66,10 @@ class ApiClient {
   Future<T> patch<T>(String path, {Object? body, CancelToken? cancelToken}) =>
       _send<T>(() => dio.patch(path, data: body, cancelToken: cancelToken, options: _opts(true)));
 
-  Future<T> delete<T>(String path, {CancelToken? cancelToken}) =>
-      _send<T>(() => dio.delete(path, cancelToken: cancelToken, options: _opts(true)));
+  Future<T> delete<T>(String path, {CancelToken? cancelToken}) => _send<T>(() => dio.delete(path, cancelToken: cancelToken, options: _opts(true)));
 
-  Options _opts(bool auth, [String? idempotencyKey]) => Options(
-        extra: {'auth': auth},
-        headers: {if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey},
-      );
+  Options _opts(bool auth, [String? idempotencyKey]) =>
+      Options(extra: {'auth': auth}, headers: {if (idempotencyKey != null) 'Idempotency-Key': idempotencyKey});
 
   Future<T> _send<T>(Future<Response<dynamic>> Function() call) async {
     try {

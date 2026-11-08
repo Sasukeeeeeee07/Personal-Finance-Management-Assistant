@@ -68,12 +68,18 @@ void main() {
   });
 
   test('maps the backend error body into ApiError', () async {
-    backend.responses['/accounts'] = (400, {
-      'statusCode': 400,
-      'code': 'validation_failed',
-      'message': 'Some fields need attention.',
-      'fields': {'name': ['Enter an account name.'], 'type': ['Choose an account type.']},
-    });
+    backend.responses['/accounts'] = (
+      400,
+      {
+        'statusCode': 400,
+        'code': 'validation_failed',
+        'message': 'Some fields need attention.',
+        'fields': {
+          'name': ['Enter an account name.'],
+          'type': ['Choose an account type.'],
+        },
+      },
+    );
     try {
       await client.post('/accounts', body: {});
       fail('expected an error');
@@ -86,7 +92,10 @@ void main() {
   });
 
   test('maps domain errors and 5xx', () async {
-    backend.responses['/transactions'] = (422, {'statusCode': 422, 'code': 'before_tracking_start', 'message': 'This date is before you started tracking HDFC.'});
+    backend.responses['/transactions'] = (
+      422,
+      {'statusCode': 422, 'code': 'before_tracking_start', 'message': 'This date is before you started tracking HDFC.'},
+    );
     await expectLater(client.post('/transactions'), throwsA(isA<ApiError>().having((e) => e.code, 'code', 'before_tracking_start')));
     backend.responses['/boom'] = (500, {'statusCode': 500, 'code': 'internal_error', 'message': 'Something went wrong on our side. Please try again.'});
     await expectLater(client.get('/boom'), throwsA(isA<ApiError>().having((e) => e.kind, 'kind', ApiErrorKind.server)));

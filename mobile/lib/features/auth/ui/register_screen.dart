@@ -51,7 +51,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (e.code == 'email_taken') {
           _fieldErrors = {'email': e.message};
         } else if (e.fields.isNotEmpty) {
-          _fieldErrors = {for (final f in ['fullName', 'email', 'password']) if (e.fieldError(f) != null) f: e.fieldError(f)!};
+          _fieldErrors = {
+            for (final f in ['fullName', 'email', 'password'])
+              if (e.fieldError(f) != null) f: e.fieldError(f)!,
+          };
           if (_fieldErrors.isEmpty) _error = e.message;
         } else {
           _error = e.message;

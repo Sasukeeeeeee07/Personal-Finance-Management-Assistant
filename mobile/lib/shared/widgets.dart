@@ -138,7 +138,9 @@ class MessageBanner extends StatelessWidget {
           children: [
             Icon(icon, color: fg, size: 20),
             const SizedBox(width: Space.md),
-            Expanded(child: Text(message, style: TextStyle(color: fg))),
+            Expanded(
+              child: Text(message, style: TextStyle(color: fg)),
+            ),
             if (action != null) action!,
           ],
         ),

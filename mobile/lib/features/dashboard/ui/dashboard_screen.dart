@@ -36,7 +36,11 @@ class DashboardScreen extends ConsumerWidget {
       onRetry: () => ref.invalidate(dashboardSummaryProvider),
       builder: (_, s) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [AvailableHero(summary: s), const SizedBox(height: Space.lg), MoneyOverview(summary: s)],
+        children: [
+          AvailableHero(summary: s),
+          const SizedBox(height: Space.lg),
+          MoneyOverview(summary: s),
+        ],
       ),
     );
     final budgetCard = SectionCard<List<BudgetStatus>>(
@@ -77,50 +81,67 @@ class DashboardScreen extends ConsumerWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () => refreshDashboard(ref),
-          child: LayoutBuilder(builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 840;
-            final header = Padding(
-              padding: const EdgeInsets.only(bottom: Space.lg),
-              child: Row(children: [
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Hi, ${user?.fullName.split(' ').first ?? 'there'}', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600)),
-                    if (today != null) Text(Fmt.longToday(today), style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                  ]),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 840;
+              final header = Padding(
+                padding: const EdgeInsets.only(bottom: Space.lg),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hi, ${user?.fullName.split(' ').first ?? 'there'}',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          if (today != null)
+                            Text(
+                              Fmt.longToday(today),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Pull-to-refresh is touch-only; this keeps refresh available with a mouse, keyboard or screen reader.
+                    const _RefreshButton(),
+                  ],
                 ),
-                // Pull-to-refresh is touch-only; this keeps refresh available with a mouse, keyboard or screen reader.
-                const _RefreshButton(),
-              ]),
-            );
-            const gap = SizedBox(height: Space.lg);
-            final content = wide
-                ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: Column(children: [hero, gap, forecastCard])),
-                    const SizedBox(width: Space.lg),
-                    Expanded(child: Column(children: [budgetCard, gap, lockCard, gap, recentCard])),
-                  ])
-                : Column(children: [hero, gap, budgetCard, gap, lockCard, gap, forecastCard, gap, recentCard]);
-            return ListView(
-              // Always scrollable so pull-to-refresh works even when content is short.
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(Space.lg),
-              children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: wide ? 1200 : 640),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      header,
-                      if (offline) ...[
-                        const _OfflineBanner(),
-                        gap,
+              );
+              const gap = SizedBox(height: Space.lg);
+              final content = wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: Column(children: [hero, gap, forecastCard])),
+                        const SizedBox(width: Space.lg),
+                        Expanded(child: Column(children: [budgetCard, gap, lockCard, gap, recentCard])),
                       ],
-                      content,
-                    ]),
+                    )
+                  : Column(children: [hero, gap, budgetCard, gap, lockCard, gap, forecastCard, gap, recentCard]);
+              return ListView(
+                // Always scrollable so pull-to-refresh works even when content is short.
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(Space.lg),
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: wide ? 1200 : 640),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          header,
+                          if (offline) ...[const _OfflineBanner(), gap],
+                          content,
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            );
-          }),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -145,11 +166,11 @@ class _RefreshButtonState extends ConsumerState<_RefreshButton> {
 
   @override
   Widget build(BuildContext context) => IconButton(
-        key: const Key('dashboard.refresh'),
-        tooltip: 'Refresh',
-        onPressed: _busy ? null : _refresh,
-        icon: _busy ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
-      );
+    key: const Key('dashboard.refresh'),
+    tooltip: 'Refresh',
+    onPressed: _busy ? null : _refresh,
+    icon: _busy ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.refresh),
+  );
 }
 
 class _OfflineBanner extends StatelessWidget {
@@ -163,11 +184,15 @@ class _OfflineBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(Space.md),
         decoration: BoxDecoration(color: scheme.secondaryContainer, borderRadius: BorderRadius.circular(Radii.md)),
-        child: Row(children: [
-          Icon(Icons.cloud_off_outlined, color: scheme.onSecondaryContainer),
-          const SizedBox(width: Space.md),
-          Expanded(child: Text('You’re offline. Pull down or tap Refresh to try again when you’re connected.', style: TextStyle(color: scheme.onSecondaryContainer))),
-        ]),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_outlined, color: scheme.onSecondaryContainer),
+            const SizedBox(width: Space.md),
+            Expanded(
+              child: Text('You’re offline. Pull down or tap Refresh to try again when you’re connected.', style: TextStyle(color: scheme.onSecondaryContainer)),
+            ),
+          ],
+        ),
       ),
     );
   }

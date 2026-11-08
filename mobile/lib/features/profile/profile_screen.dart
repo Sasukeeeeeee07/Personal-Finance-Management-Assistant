@@ -118,7 +118,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             children: [
                               Text('Confirm your email', style: text.titleMedium),
                               const SizedBox(height: Space.xs),
-                              Text('We sent a link to ${user.email}. Confirming it lets you recover your account if you forget your password.', style: text.bodyMedium),
+                              Text(
+                                'We sent a link to ${user.email}. Confirming it lets you recover your account if you forget your password.',
+                                style: text.bodyMedium,
+                              ),
                               const SizedBox(height: Space.md),
                               OutlinedButton.icon(
                                 onPressed: _sendingVerification ? null : _resendVerification,
@@ -174,8 +177,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   static String _roleLabel(String role) => switch (role) {
-        'org_admin' => 'Admin',
-        'standard_user' => 'Member',
-        _ => role,
-      };
+    'org_admin' => 'Admin',
+    'standard_user' => 'Member',
+    _ => role,
+  };
 }

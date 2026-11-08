@@ -2,6 +2,22 @@
 
 Only runs that were actually executed are recorded here.
 
+## GitHub Actions CI — configured 2026-11-08, **not yet run**
+
+Workflow: `.github/workflows/ci.yml`, triggered on every push and pull request. Repository: https://github.com/Sasukeeeeeee07/Personal-Finance-Management-Assistant
+
+| Job | Steps |
+|---|---|
+| `backend` | Node 20 · `npm ci` (lockfile) · type-check · `npm test` (embedded PGlite) · `npm run build` |
+| `postgresql` | PostgreSQL 16 service (UTF-8) · wait for readiness · check `server_encoding = UTF8` · confirm empty database · `npm run migrate` · verify every migration recorded · roll back latest and re-apply · `npm test` with `TEST_DATABASE_URL` (real PostgreSQL) |
+| `flutter` | Flutter 3.35.7 · `flutter pub get` · `dart format --set-exit-if-changed` · `flutter analyze` · `flutter test` · `flutter build web --release` |
+
+**Status: not passed yet** — no GitHub Actions run has completed. This section will be updated with the run URL and result once it does.
+
+Local checks run before committing the workflow (same commands, Windows, 2026-11-08): `dart format --set-exit-if-changed` clean (after a one-time whitespace-only format at line width 160), `flutter analyze` no issues, `flutter test` 38 passed / 3 skipped. Backend unchanged since the last recorded run (113/113 on PGlite and PostgreSQL 17.11).
+
+**Known risk for CI (KI-023):** two forecast tests pin `asOf=2026-11-08` while creating commitments at the current time; on any later date those commitments postdate `asOf` and the tests are expected to fail. They need an injectable clock or relative dates.
+
 ## Latest run — 2026-11-08 (Flutter step 2: Dashboard)
 
 | Environment | Command | Result |
