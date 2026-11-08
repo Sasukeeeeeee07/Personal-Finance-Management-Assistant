@@ -214,7 +214,77 @@ export interface MoneyReservationsTable {
   updated_at: GeneratedTimestamp;
 }
 
+export type BudgetPeriod = 'monthly' | 'weekly' | 'custom';
+
+export interface BudgetsTable {
+  id: Generated<string>;
+  owner_id: string;
+  organization_id: string;
+  name: string;
+  scope: 'overall' | 'category';
+  category_id: string | null;
+  period: BudgetPeriod;
+  period_days: number | null;
+  amount: Money;
+  currency: Generated<string>;
+  start_date: DateOnly;
+  rollover: Generated<boolean>;
+  alert_thresholds: ColumnType<number[], number[] | undefined, number[]>;
+  status: Generated<'active' | 'archived'>;
+  created_at: GeneratedTimestamp;
+  updated_at: GeneratedTimestamp;
+}
+
+export interface BudgetAlertsTable {
+  id: Generated<string>;
+  owner_id: string;
+  budget_id: string;
+  period_start: DateOnly;
+  kind: 'threshold' | 'exceeded';
+  threshold: number;
+  spent: Money;
+  limit_amount: Money;
+  delivered_at: TimestampNullable;
+  created_at: GeneratedTimestamp;
+}
+
+export type GoalKind = 'emergency_fund' | 'gadget' | 'vacation' | 'education' | 'vehicle' | 'savings' | 'custom';
+
+export interface FinancialGoalsTable {
+  id: Generated<string>;
+  owner_id: string;
+  organization_id: string;
+  name: string;
+  kind: Generated<GoalKind>;
+  target_amount: Money;
+  currency: Generated<string>;
+  target_date: string | null;
+  monthly_contribution: MoneyNullable;
+  priority: Generated<number>;
+  account_id: string | null;
+  status: Generated<'active' | 'completed' | 'archived'>;
+  completed_at: TimestampNullable;
+  created_at: GeneratedTimestamp;
+  updated_at: GeneratedTimestamp;
+}
+
+export interface GoalContributionsTable {
+  id: Generated<string>;
+  owner_id: string;
+  goal_id: string;
+  amount: Money;
+  contributed_on: DateOnly;
+  note: string | null;
+  is_opening: Generated<boolean>;
+  transaction_id: string | null;
+  created_at: GeneratedTimestamp;
+}
+
 export interface Database {
+  budgets: BudgetsTable;
+  budget_alerts: BudgetAlertsTable;
+  financial_goals: FinancialGoalsTable;
+  goal_contributions: GoalContributionsTable;
   organizations: OrganizationsTable;
   roles: RolesTable;
   permissions: PermissionsTable;

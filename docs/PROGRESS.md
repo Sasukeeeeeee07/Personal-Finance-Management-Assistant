@@ -1,63 +1,57 @@
 # Development Progress
 
-Last updated: 2026-11-08
+Last updated: 2026-11-08 · Evidence for every "tested" claim is in [TEST_REPORT.md](TEST_REPORT.md).
 
 ## Completed (tested)
 
 ### Phase 1 — Foundation (backend)
-- [x] Monorepo layout, implementation plan (`docs/IMPLEMENTATION_PLAN.md`)
-- [x] NestJS 11 API, `/api/v1` prefix, Swagger at `/api/docs` (30 paths)
-- [x] PostgreSQL schema with SQL migrations + idempotent reference seed (roles, permissions, 24 system categories)
-- [x] Embedded PGlite fallback when `DATABASE_URL` is unset (no Docker on dev machine)
-- [x] Auth: register, email/password login, Google ID-token sign-in, email verification, forgot/reset password, logout (one device / all devices), session list + revoke
-- [x] Argon2id password hashing; refresh-token rotation with reuse detection (revokes the family)
-- [x] Access tokens rejected immediately after logout/reset (session check per request)
-- [x] RBAC: roles / permissions / role_permissions as data; `@RequirePermissions()` guard; Super Admin, Org Admin, Standard User
-- [x] Tenant isolation: every financial query is scoped by owner; other users' records return 404
-- [x] Org admins can manage members but get no access to members' finances
-- [x] Rate limiting (stricter on credential endpoints), helmet, strict validation (unknown fields rejected), safe error filter (no stack traces or SQL in responses)
+- [x] NestJS 11 API, `/api/v1`, Swagger at `/api/docs`
+- [x] PostgreSQL schema, reversible SQL migrations (`npm run migrate`, `npm run migrate -- --down`), idempotent reference seed
+- [x] PGlite fallback for local dev; production refuses to start without `DATABASE_URL`
+- [x] Auth: register, login, Google ID token (untested with real tokens, KI-003), email verification, forgot/reset, logout (one/all devices), session list/revoke
+- [x] Argon2id; refresh-token rotation with reuse detection; per-request session check
+- [x] RBAC (Super Admin, Org Admin, Standard User) as data; permission guard
+- [x] Per-user financial isolation; org admins cannot see members' finances
+- [x] Rate limiting, helmet, strict validation, safe error responses
 
-### Phase 2 — Core financial system (backend)
-- [x] Accounts: savings, current, cash, UPI bank, credit card, wallet, FD, other; opening balance; masked number (last 4 digits only); archive; delete only if unused
-- [x] Account reconciliation (tracked vs bank balance, with an explanation of the gap)
-- [x] Income, expenses, transfers; append-only ledger (edits/deletes post reversing entries)
-- [x] Credit card: purchase = expense on card; bill payment = transfer (settles the liability, not a second expense); outstanding + available credit
-- [x] Statuses: confirmed / needs_review / duplicate / ignored / failed; only confirmed transactions affect balances
-- [x] Dedup: exact (same account + bank reference) → duplicate; fuzzy (automatic source, same amount ±10 min) → needs_review
-- [x] Edit with optimistic locking (`version`), full audit history per transaction
-- [x] Custom categories; essential/non-essential default from category
-- [x] Expense intelligence: category spend this month vs last month
+### Phase 2 — Financial core (backend)
+- [x] Accounts (8 types), masking, archive, reconcile against bank balance
+- [x] Income / expense / transfer on an append-only ledger with reversals
+- [x] Credit card purchase and bill settlement
+- [x] Statuses, exact + fuzzy dedup, optimistic locking, audit history
+- [x] Custom categories; expense insight (month vs last month, budget impact)
 
-### Phase 3 (partial) — Money Lock
-- [x] Commitments (once / weekly / monthly / yearly / every N days) with anchor-day month handling
-- [x] Reservations: full, partial, top-up, release, cancel; overdue flag; overcommitted warning
-- [x] Settle by paying with `reservationId` or linking an existing transaction; amount mismatch must be confirmed
-- [x] Next occurrence reserved automatically after settlement; deleting the payment re-holds the reservation
-- [x] Dashboard summary: total balance, liquid balance, reserved, available-to-spend, card dues, month income/expenses, review queue, upcoming payments, formula explanation
+### Phase 3 — Financial management (backend)
+- [x] Money Lock: commitments, full/partial reservations, release, cancel, overdue, overcommitted, atomic settlement, next-period auto-reservation
+- [x] Budgets: overall/category; monthly (configurable reset day), weekly, custom; utilisation, remaining, daily target; rollover; configurable threshold alerts + exceeded alert, once per period
+- [x] Goals: create/edit/complete/archive, contributions/withdrawals as allocations, auto-complete, projections
+- [x] Month-end forecast with explicit assumptions
+- [x] Dashboard: total balance, reserved, allocated, available-to-spend, card dues, month income/expenses, savings, remaining monthly budget, upcoming payments
 
-### Tests — 35 passing (`cd backend && npm test`)
-Critical cases covered: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12. Plus auth, token rotation/reuse, email verification, password reset, RBAC, validation.
+### Validation
+- [x] 70 tests pass on PGlite
+- [x] 70 tests pass on **real PostgreSQL 17.11** (local); migrations apply, roll back and re-apply
+- [ ] CI on PostgreSQL 16 (GitHub Actions) — workflow ready, never run (no remote) — **blocker for claiming PG 16**
 
-## Pending
-- [ ] **Web app** (Next.js): auth screens, dashboard, accounts, transactions, Money Lock
-- [ ] **Flutter app**: auth (+ biometric unlock), Home / Transactions / Budget / Goals / Profile, quick-add
-- [ ] Phase 3: budgets (+ alerts, carry-forward, reset dates; test case 11), goals + goal allocations in available-to-spend
-- [ ] Phase 3: attachments (receipts) on object storage
-- [ ] Phase 3: recurring income/expense schedules (auto-generated transactions)
-- [ ] Phase 4: analytics endpoints, charts, monthly/yearly reports, PDF/CSV export
-- [ ] Phase 5: ingestion adapters, CSV/XLSX/PDF statement import, Android SMS/notification capture, BullMQ jobs, reminders, categorisation rules + learning
-- [ ] Phase 6: AI coach (grounded in the user's real data), insights, education feed, smart alerts
-- [ ] Phase 7: plans, Razorpay subscriptions, Super Admin dashboard
-- [ ] Phase 8: Postgres RLS (defence in depth), encryption-at-rest config, data export, account deletion, monitoring, load tests
+## Pending (in priority order)
+1. ~~Budgets and goals~~ ✅
+2. Real PostgreSQL in CI — run once a GitHub remote exists
+3. **Flutter MVP** (Android first): auth, dashboard, accounts, transactions, Money Lock, budgets, goals, profile; quick-add
+4. **Next.js dashboard**: same modules + reports
+5. SMTP email service (templates, retry, BullMQ) and Firebase push (device tokens, preferences, quiet hours)
+6. Transaction automation: adapters, CSV/XLSX/PDF import, Android SMS / notification capture, categorisation rules
+7. Deterministic insights + discipline score; optional Ollama coach behind a provider interface
+8. SaaS plans/entitlements, billing abstraction (Razorpay later), Super Admin dashboard, production hardening
 
-## Blocked / needs a decision
-- **Docker / PostgreSQL not installed** on the dev machine. Tests run on embedded PGlite (real Postgres). `docker-compose.yml` is ready for when Docker is available.
-- **Email delivery**: the dev mailer only logs messages. Production needs an SMTP/SES provider and credentials.
-- **Google Sign-In**: needs OAuth client IDs (`GOOGLE_CLIENT_IDS`).
-- **Account Aggregator**: needs a contract with a regulated AA/FIU partner (e.g. Setu, Finvu). The app will not act as an AA itself.
-- **Razorpay**: needs merchant onboarding and API keys.
-- **AI coach**: needs a model provider API key.
+Also pending from Phase 3: recurring income/expense schedules, receipt attachments.
 
-## Known limitations
-- No cross-currency aggregation (all totals assume one currency, INR).
-- Month boundaries use India Standard Time; a per-user timezone setting is pending.
+## Blocked / needs the product owner
+- **GitHub remote** — needed for CI to run.
+- **SMTP credentials** (Gmail app password for dev, Brevo/SES for prod).
+- **Firebase project** (`google-services.json`, Admin SDK service account) for push.
+- **Google OAuth client IDs**.
+- **Account Aggregator partner** contract; **Razorpay** onboarding.
+- Decisions requested in `AI_HANDOFF.md` → HANDOFF-002 questions.
+
+## Production blockers (not production-ready)
+CI on PostgreSQL 16 · RLS / encryption-at-rest configuration · email delivery tests · push tests · mobile and web builds · backup and restore drill · monitoring/error tracking · load and concurrency testing at scale · data export and account deletion · consent records · security review.

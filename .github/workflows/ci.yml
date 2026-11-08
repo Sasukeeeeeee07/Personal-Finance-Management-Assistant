@@ -1,11 +1,12 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
 
 jobs:
-  backend:
+  backend-postgres:
+    name: Backend on PostgreSQL 16
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -15,15 +16,40 @@ jobs:
         image: postgres:16-alpine
         env: { POSTGRES_USER: pfm, POSTGRES_PASSWORD: pfm, POSTGRES_DB: pfm }
         ports: ["5432:5432"]
-        options: --health-cmd "pg_isready -U pfm" --health-interval 5s --health-retries 10
+        options: >-
+          --health-cmd "pg_isready -U pfm -d pfm"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgres://pfm:pfm@localhost:5432/pfm
+      TEST_DATABASE_URL: postgres://pfm:pfm@localhost:5432/pfm
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm, cache-dependency-path: backend/package-lock.json }
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
-      - name: Migrations apply on real PostgreSQL
+      - name: Type-check
+        run: npm run lint
+      - name: Wait for PostgreSQL
+        run: |
+          for i in $(seq 1 30); do pg_isready -h localhost -U pfm -d pfm && exit 0; sleep 2; done
+          echo "PostgreSQL did not become ready" >&2; exit 1
+      - name: Apply migrations
         run: npm run migrate
-        env: { DATABASE_URL: "postgres://pfm:pfm@localhost:5432/pfm" }
+      - name: Roll back and re-apply the latest migration
+        run: npm run migrate -- --down && npm run migrate
+      - name: Unit, integration and constraint tests on PostgreSQL
+        run: npm test -- --ci
       - run: npm run build
+
+  backend-pglite:
+    name: Backend on PGlite (local dev path)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm, cache-dependency-path: backend/package-lock.json }
+      - run: npm ci
+      - run: npm test -- --ci

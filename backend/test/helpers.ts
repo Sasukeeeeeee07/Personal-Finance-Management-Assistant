@@ -20,7 +20,8 @@ export interface TestApp {
 
 /** Boots the real app on an in-memory PGlite database. */
 export async function createTestApp(): Promise<TestApp> {
-  const config = loadConfig({ NODE_ENV: 'test', JWT_ACCESS_SECRET: 'test-secret-test-secret-test-secret-123' });
+  // TEST_DATABASE_URL runs the suite against real PostgreSQL (CI); otherwise in-memory PGlite.
+  const config = loadConfig({ NODE_ENV: 'test', JWT_ACCESS_SECRET: 'test-secret-test-secret-test-secret-123', DATABASE_URL: process.env.TEST_DATABASE_URL });
   const moduleRef = await Test.createTestingModule({ imports: [buildAppModule(config)] }).compile();
   const app = moduleRef.createNestApplication({ logger: false });
   configureApp(app, config);

@@ -49,3 +49,8 @@ CREATE UNIQUE INDEX money_reservations_commitment_due_unique
 CREATE UNIQUE INDEX money_reservations_transaction_unique
   ON money_reservations (transaction_id) WHERE transaction_id IS NOT NULL;
 `;
+
+export const down = /* sql */ `
+DROP TABLE money_reservations;
+DROP TABLE financial_commitments;
+`;

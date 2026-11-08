@@ -57,15 +57,25 @@ Fixed deposits are not liquid. Credit card dues are shown as a separate liabilit
 
 Never: unofficial Google Pay APIs, screen scraping, UPI PINs, OTPs, card CVVs, bank passwords, automated payments.
 
-## 4. Phases
+## 4. Execution order (approved 2026-11-08)
 
-1. **Foundation** — monorepo, backend skeleton, migrations, auth, RBAC, tenant model, Swagger, web + Flutter skeletons with auth.
-2. **Core financial system** — accounts, income, expenses, transfers, credit-card flows, ledger, audit log, dedup, failed transactions.
-3. **Money management** — commitments, reservations, reconciliation, budgets, goals, upcoming payments.
-4. **Analytics** — dashboard, charts, reports, monthly summaries.
-5. **Automation** — ingestion adapters, statement import, SMS (Android), notifications, categorisation engine.
-6. **Intelligence** — AI coach grounded in real data, insights, education, smart alerts.
-7. **SaaS** — plans, Razorpay subscriptions, Super Admin dashboard.
-8. **Production** — security audit, RLS, performance, deployment, monitoring.
+| Priority | Scope | Status |
+|---|---|---|
+| 1 | Phase 3: budgets, goals, forecast, test #11 | ✅ Done (HANDOFF-002) |
+| 2 | Real PostgreSQL validation in CI | ⚠️ Passed locally on PG 17.11; CI (PG 16) waits for a Git remote |
+| 3 | Flutter MVP (Android first, iOS compatible) | Next |
+| 4 | Next.js dashboard | |
+| 5 | SMTP email + Firebase notifications (BullMQ + Redis) | |
+| 6 | Transaction automation (adapters, statement import, Android SMS/notifications) | |
+| 7 | Deterministic insights, discipline score, optional Ollama coach | |
+| 8 | SaaS plans, billing abstraction, Super Admin, production hardening | |
 
-Each phase ends with its test suite passing. Progress is tracked in `docs/PROGRESS.md`.
+### Priority 3 plan — Flutter MVP
+- `mobile/` Flutter app: Riverpod, GoRouter, Material 3, light/dark, `flutter_secure_storage` for tokens.
+- One typed API client (Dio) with automatic refresh-token rotation and a single-flight refresh lock; amounts kept as strings / Decimal, never `double`.
+- Bottom navigation: Home · Transactions · Budget · Goals · Profile; quick-add FAB.
+- Screens bound to existing endpoints only; every screen has loading, empty, error and offline states.
+- Tests: unit (API client, refresh logic), widget (forms, states), navigation; an integration test against a locally running backend.
+- Android-specific code (SMS, notification listener) is kept out of shared code (Priority 6).
+
+Each priority ends with tests run, docs updated and an AI_HANDOFF entry.
