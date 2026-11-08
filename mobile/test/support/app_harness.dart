@@ -18,17 +18,19 @@ Future<(FakeBackend, MemoryTokenStore)> pumpApp(WidgetTester tester, {TokenPair?
   // A caller-supplied backend keeps its own responses (e.g. a failing endpoint under test).
   if (backend == null) serveDashboard(api, empty: emptyDashboard);
   final store = MemoryTokenStore(stored);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      tokenStoreProvider.overrideWithValue(store),
-      apiClientProvider.overrideWith((ref) {
-        final c = ApiClient(baseUrl: 'http://test/api/v1', tokens: store, adapter: api);
-        c.onSessionExpired = () => ref.read(authControllerProvider.notifier).sessionExpired();
-        return c;
-      }),
-    ],
-    child: const PfmApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        tokenStoreProvider.overrideWithValue(store),
+        apiClientProvider.overrideWith((ref) {
+          final c = ApiClient(baseUrl: 'http://test/api/v1', tokens: store, adapter: api);
+          c.onSessionExpired = () => ref.read(authControllerProvider.notifier).sessionExpired();
+          return c;
+        }),
+      ],
+      child: const PfmApp(),
+    ),
+  );
   await tester.pumpAndSettle();
   return (api, store);
 }

@@ -6,7 +6,7 @@ Severity: **High** (wrong numbers or security exposure possible), **Medium** (in
 
 | ID | Severity | Area | Issue | Plan |
 |---|---|---|---|---|
-| KI-001 | Medium | Validation | CI (PostgreSQL 16, Flutter) has never run because there is no Git remote. Real Postgres is validated on 17.11 locally only. | Push to GitHub. |
+| KI-001 | Medium | Validation | GitHub remote now exists and CI is configured, but no GitHub Actions run has completed yet. Real Postgres is validated on 17.11 locally only. | Push the `ci/github-actions` branch and check the run. |
 | KI-002 | Medium | Email | Mailer only logs messages; no delivery, retry or queue. | Priority 5 (SMTP + BullMQ, outbox D-021). |
 | KI-003 | Medium | Auth | Google Sign-In untested with real Google tokens; not wired in the Flutter app yet. | Needs OAuth client IDs. |
 | KI-004 | Medium | Security | No Postgres row-level security; isolation relies on owner filtering (covered by tests). | Evaluated in D-022; Priority 8 behind a flag. |
@@ -36,3 +36,4 @@ Severity: **High** (wrong numbers or security exposure possible), **Medium** (in
 | KI-006 (asOf) | Past `asOf` now uses the balance as of that date; future `asOf` is rejected (D-016). |
 | — | Offline sign-out no longer waits ~10 s for a network timeout (found in browser walkthrough). |
 | — | Migrations now refuse to run on a non-UTF-8 database (found on real PostgreSQL). |
+| KI-023 | **Resolved 2026-11-08 (tests only).** Two forecast tests pinned `asOf=2026-11-08` but their commitments and reservations got `created_at = now()` from the database, which historical forecasts compare with `asOf`; from 9 Nov they would have dropped out. All their dates are now derived from one `AS_OF` constant, and a test helper (`setCommitmentsCreatedAt`) places the commitments and reservations on the morning of `AS_OF`. Assertions unchanged; one assertion added proving a commitment created after `asOf` is excluded. Forecast logic not changed. |

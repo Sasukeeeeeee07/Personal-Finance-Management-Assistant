@@ -2,6 +2,37 @@
 
 Only runs that were actually executed are recorded here.
 
+## GitHub Actions CI — configured 2026-11-08, **not yet run**
+
+Workflow: `.github/workflows/ci.yml`, triggered on every push and pull request. Repository: https://github.com/Sasukeeeeeee07/Personal-Finance-Management-Assistant
+
+| Job | Steps |
+|---|---|
+| `backend` | Node 20 · `npm ci` (lockfile) · type-check · `npm test` (embedded PGlite) · `npm run build` |
+| `postgresql` | PostgreSQL 16 service (UTF-8) · wait for readiness · check `server_encoding = UTF8` · confirm empty database · `npm run migrate` · verify every migration recorded · roll back latest and re-apply · `npm test` with `TEST_DATABASE_URL` (real PostgreSQL) |
+| `flutter` | Flutter 3.35.7 · `flutter pub get` · `dart format --set-exit-if-changed` · `flutter analyze` · `flutter test` · `flutter build web --release` |
+
+**Status: not passed yet** — no GitHub Actions run has completed. This section will be updated with the run URL and result once it does.
+
+Local checks run before committing the workflow (same commands, Windows, 2026-11-08): `dart format --set-exit-if-changed` clean (after a one-time whitespace-only format at line width 160), `flutter analyze` no issues, `flutter test` 38 passed / 3 skipped. Backend unchanged since the last recorded run (113/113 on PGlite and PostgreSQL 17.11).
+
+**KI-023 fixed before the first push (2026-11-08, tests only).** Two forecast tests pinned `asOf=2026-11-08` while the database stamped their commitments and reservations with the real current time, so they would have failed from 9 Nov onward.
+
+| Test | Change |
+|---|---|
+| `budgets-goals.e2e-spec.ts` › Month-end forecast › combines balances, scheduled payments… | Dates derived from `AS_OF` (`addDays`); Rent/Gym commitments and their reservations placed at `AS_OF` 08:00 IST via `setCommitmentsCreatedAt`. Assertions unchanged. |
+| `review-gate.e2e-spec.ts` › B5 › does not double-count… | Same treatment for the Netflix commitment; **added** assertions that a commitment created the day after `asOf` is excluded from that forecast (and the recurring expense is expected instead) — the exact failure mode. |
+
+Results after the fix:
+
+| Run | Result |
+|---|---|
+| The two affected tests | 2 / 2 passed |
+| Full backend suite, PGlite | **113 / 113 passed** |
+| Full backend suite, real PostgreSQL 17.11 (local, after migrating a clean database) | **113 / 113 passed** |
+
+No application or forecasting code changed.
+
 ## Latest run — 2026-11-08 (Flutter step 2: Dashboard)
 
 | Environment | Command | Result |

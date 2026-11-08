@@ -1,1 +1,5 @@
 include: package:flutter_lints/flutter.yaml
+
+formatter:
+  # Matches the line length the code is written to; enforced in CI with dart format --set-exit-if-changed.
+  page_width: 160

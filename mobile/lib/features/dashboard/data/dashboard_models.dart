@@ -10,7 +10,14 @@ Money? _mOrNull(Json j, String k) => j[k] == null ? null : Money.fromApi(j[k] as
 List<T> _list<T>(Json j, String k, T Function(Json) f) => (j[k] as List).map((e) => f(e as Json)).toList();
 
 class MonthlyBudgetSnapshot {
-  const MonthlyBudgetSnapshot({required this.budgetId, required this.limit, required this.spent, required this.remaining, required this.utilizationPercent, required this.dailyTarget});
+  const MonthlyBudgetSnapshot({
+    required this.budgetId,
+    required this.limit,
+    required this.spent,
+    required this.remaining,
+    required this.utilizationPercent,
+    required this.dailyTarget,
+  });
 
   final String budgetId;
   final Money limit;
@@ -22,17 +29,24 @@ class MonthlyBudgetSnapshot {
   final Money dailyTarget;
 
   factory MonthlyBudgetSnapshot.fromJson(Json j) => MonthlyBudgetSnapshot(
-        budgetId: j['budgetId'] as String,
-        limit: _m(j, 'limit'),
-        spent: _m(j, 'spent'),
-        remaining: _m(j, 'remaining'),
-        utilizationPercent: j['utilizationPercent'] as String,
-        dailyTarget: _m(j, 'dailyTarget'),
-      );
+    budgetId: j['budgetId'] as String,
+    limit: _m(j, 'limit'),
+    spent: _m(j, 'spent'),
+    remaining: _m(j, 'remaining'),
+    utilizationPercent: j['utilizationPercent'] as String,
+    dailyTarget: _m(j, 'dailyTarget'),
+  );
 }
 
 class UpcomingPayment {
-  const UpcomingPayment({required this.reservationId, required this.name, required this.amount, required this.reserved, required this.dueDate, required this.overdue});
+  const UpcomingPayment({
+    required this.reservationId,
+    required this.name,
+    required this.amount,
+    required this.reserved,
+    required this.dueDate,
+    required this.overdue,
+  });
 
   final String reservationId;
   final String name;
@@ -44,13 +58,13 @@ class UpcomingPayment {
   bool get fullyReserved => reserved.compareTo(amount) >= 0;
 
   factory UpcomingPayment.fromJson(Json j) => UpcomingPayment(
-        reservationId: j['reservationId'] as String,
-        name: j['name'] as String,
-        amount: _m(j, 'amount'),
-        reserved: _m(j, 'reserved'),
-        dueDate: j['dueDate'] as String,
-        overdue: j['overdue'] as bool,
-      );
+    reservationId: j['reservationId'] as String,
+    name: j['name'] as String,
+    amount: _m(j, 'amount'),
+    reserved: _m(j, 'reserved'),
+    dueDate: j['dueDate'] as String,
+    overdue: j['overdue'] as bool,
+  );
 }
 
 class DashboardSummary {
@@ -93,24 +107,24 @@ class DashboardSummary {
   final List<String> calculationNotes;
 
   factory DashboardSummary.fromJson(Json j) => DashboardSummary(
-        asOf: j['asOf'] as String,
-        totalBalance: _m(j, 'totalBalance'),
-        netPosition: _m(j, 'netPosition'),
-        liquidBalance: _m(j, 'liquidBalance'),
-        reserved: _m(j, 'reserved'),
-        allocated: _m(j, 'allocated'),
-        availableToSpend: _m(j, 'availableToSpend'),
-        overcommitted: j['overcommitted'] as bool,
-        creditCardOutstanding: _m(j, 'creditCardOutstanding'),
-        monthIncome: _m(j, 'monthIncome'),
-        monthExpenses: _m(j, 'monthExpenses'),
-        monthNet: _m(j, 'monthNet'),
-        needsReviewCount: j['needsReviewCount'] as int,
-        savings: _m(j, 'savings'),
-        monthlyBudget: j['monthlyBudget'] == null ? null : MonthlyBudgetSnapshot.fromJson(j['monthlyBudget'] as Json),
-        upcomingPayments: _list(j, 'upcomingPayments', UpcomingPayment.fromJson),
-        calculationNotes: ((j['calculation'] as Json)['notes'] as List).cast<String>(),
-      );
+    asOf: j['asOf'] as String,
+    totalBalance: _m(j, 'totalBalance'),
+    netPosition: _m(j, 'netPosition'),
+    liquidBalance: _m(j, 'liquidBalance'),
+    reserved: _m(j, 'reserved'),
+    allocated: _m(j, 'allocated'),
+    availableToSpend: _m(j, 'availableToSpend'),
+    overcommitted: j['overcommitted'] as bool,
+    creditCardOutstanding: _m(j, 'creditCardOutstanding'),
+    monthIncome: _m(j, 'monthIncome'),
+    monthExpenses: _m(j, 'monthExpenses'),
+    monthNet: _m(j, 'monthNet'),
+    needsReviewCount: j['needsReviewCount'] as int,
+    savings: _m(j, 'savings'),
+    monthlyBudget: j['monthlyBudget'] == null ? null : MonthlyBudgetSnapshot.fromJson(j['monthlyBudget'] as Json),
+    upcomingPayments: _list(j, 'upcomingPayments', UpcomingPayment.fromJson),
+    calculationNotes: ((j['calculation'] as Json)['notes'] as List).cast<String>(),
+  );
 }
 
 enum BudgetHealth { onTrack, warning, exceeded }
@@ -211,22 +225,22 @@ class Forecast {
   final Money startingLiquidBalance;
 
   factory Forecast.fromJson(Json j) => Forecast(
-        asOf: j['asOf'] as String,
-        monthEnd: j['monthEnd'] as String,
-        daysLeft: j['daysLeft'] as int,
-        estimatedMonthEndBalance: _m(j, 'estimatedMonthEndBalance'),
-        estimatedAvailableAtMonthEnd: _m(j, 'estimatedAvailableAtMonthEnd'),
-        availableNow: _m(j, 'availableNow'),
-        availableChangeByMonthEnd: _m(j, 'availableChangeByMonthEnd'),
-        shortfallRisk: j['shortfallRisk'] as bool,
-        confidence: j['confidence'] as String,
-        assumptions: (j['assumptions'] as List).cast<String>(),
-        expectedIncome: _m(j['expectedIncome'] as Json, 'total'),
-        scheduledPayments: _m(j['scheduledPayments'] as Json, 'total'),
-        recurringExpenses: _m(j['expectedRecurringExpenses'] as Json, 'total'),
-        variableSpending: _m(j['variableSpending'] as Json, 'total'),
-        startingLiquidBalance: _m(j, 'startingLiquidBalance'),
-      );
+    asOf: j['asOf'] as String,
+    monthEnd: j['monthEnd'] as String,
+    daysLeft: j['daysLeft'] as int,
+    estimatedMonthEndBalance: _m(j, 'estimatedMonthEndBalance'),
+    estimatedAvailableAtMonthEnd: _m(j, 'estimatedAvailableAtMonthEnd'),
+    availableNow: _m(j, 'availableNow'),
+    availableChangeByMonthEnd: _m(j, 'availableChangeByMonthEnd'),
+    shortfallRisk: j['shortfallRisk'] as bool,
+    confidence: j['confidence'] as String,
+    assumptions: (j['assumptions'] as List).cast<String>(),
+    expectedIncome: _m(j['expectedIncome'] as Json, 'total'),
+    scheduledPayments: _m(j['scheduledPayments'] as Json, 'total'),
+    recurringExpenses: _m(j['expectedRecurringExpenses'] as Json, 'total'),
+    variableSpending: _m(j['variableSpending'] as Json, 'total'),
+    startingLiquidBalance: _m(j, 'startingLiquidBalance'),
+  );
 }
 
 class TransactionItem {
@@ -268,20 +282,20 @@ class TransactionItem {
   String? get counterparty => merchant ?? sourceName ?? description;
 
   factory TransactionItem.fromJson(Json j) => TransactionItem(
-        id: j['id'] as String,
-        type: j['type'] as String,
-        status: j['status'] as String,
-        amount: _m(j, 'amount'),
-        accountId: j['accountId'] as String,
-        destinationAccountId: j['destinationAccountId'] as String?,
-        categoryId: j['categoryId'] as String?,
-        occurredAt: DateTime.parse(j['occurredAt'] as String),
-        merchant: j['merchant'] as String?,
-        sourceName: j['sourceName'] as String?,
-        description: j['description'] as String?,
-        source: j['source'] as String,
-        isHistorical: j['isHistorical'] as bool,
-      );
+    id: j['id'] as String,
+    type: j['type'] as String,
+    status: j['status'] as String,
+    amount: _m(j, 'amount'),
+    accountId: j['accountId'] as String,
+    destinationAccountId: j['destinationAccountId'] as String?,
+    categoryId: j['categoryId'] as String?,
+    occurredAt: DateTime.parse(j['occurredAt'] as String),
+    merchant: j['merchant'] as String?,
+    sourceName: j['sourceName'] as String?,
+    description: j['description'] as String?,
+    source: j['source'] as String,
+    isHistorical: j['isHistorical'] as bool,
+  );
 }
 
 class TransactionInsight {
@@ -293,15 +307,24 @@ class TransactionInsight {
   final BudgetStatus? budget;
 
   factory TransactionInsight.fromJson(Json j) => TransactionInsight(
-        spentThisMonth: _m(j, 'categorySpentThisMonth'),
-        spentLastMonth: _m(j, 'categorySpentLastMonth'),
-        changeFromLastMonth: _m(j, 'changeFromLastMonth'),
-        budget: j['budget'] == null ? null : BudgetStatus.fromJson(j['budget'] as Json),
-      );
+    spentThisMonth: _m(j, 'categorySpentThisMonth'),
+    spentLastMonth: _m(j, 'categorySpentLastMonth'),
+    changeFromLastMonth: _m(j, 'changeFromLastMonth'),
+    budget: j['budget'] == null ? null : BudgetStatus.fromJson(j['budget'] as Json),
+  );
 }
 
 class TransactionDetail {
-  const TransactionDetail({required this.item, required this.notes, required this.paymentMethod, required this.externalReference, required this.isPlanned, required this.isEssential, required this.isRecurring, required this.insight});
+  const TransactionDetail({
+    required this.item,
+    required this.notes,
+    required this.paymentMethod,
+    required this.externalReference,
+    required this.isPlanned,
+    required this.isEssential,
+    required this.isRecurring,
+    required this.insight,
+  });
 
   final TransactionItem item;
   final String? notes;
@@ -313,15 +336,15 @@ class TransactionDetail {
   final TransactionInsight? insight;
 
   factory TransactionDetail.fromJson(Json j) => TransactionDetail(
-        item: TransactionItem.fromJson(j),
-        notes: j['notes'] as String?,
-        paymentMethod: j['paymentMethod'] as String?,
-        externalReference: j['externalReference'] as String?,
-        isPlanned: j['isPlanned'] as bool?,
-        isEssential: j['isEssential'] as bool?,
-        isRecurring: j['isRecurring'] as bool,
-        insight: j['insight'] == null ? null : TransactionInsight.fromJson(j['insight'] as Json),
-      );
+    item: TransactionItem.fromJson(j),
+    notes: j['notes'] as String?,
+    paymentMethod: j['paymentMethod'] as String?,
+    externalReference: j['externalReference'] as String?,
+    isPlanned: j['isPlanned'] as bool?,
+    isEssential: j['isEssential'] as bool?,
+    isRecurring: j['isRecurring'] as bool,
+    insight: j['insight'] == null ? null : TransactionInsight.fromJson(j['insight'] as Json),
+  );
 }
 
 class AccountRef {
@@ -337,13 +360,13 @@ class AccountRef {
   String get label => accountMask == null ? name : '$name ••$accountMask';
 
   factory AccountRef.fromJson(Json j) => AccountRef(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        type: j['type'] as String,
-        accountMask: j['accountMask'] as String?,
-        balance: _m(j, 'balance'),
-        outstanding: _mOrNull(j, 'outstanding'),
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    type: j['type'] as String,
+    accountMask: j['accountMask'] as String?,
+    balance: _m(j, 'balance'),
+    outstanding: _mOrNull(j, 'outstanding'),
+  );
 }
 
 class CategoryRef {

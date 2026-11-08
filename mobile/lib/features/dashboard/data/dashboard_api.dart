@@ -20,8 +20,11 @@ class DashboardApi {
 
   /// Latest confirmed transactions (income, expenses and transfers), newest first.
   Future<List<TransactionItem>> recentTransactions({int limit = 5, CancelToken? cancel}) async {
-    final page = await _client.get<Map<String, dynamic>>('/transactions',
-        query: {'status': 'confirmed', 'pageSize': limit, 'sort': 'occurredAt:desc'}, cancelToken: cancel);
+    final page = await _client.get<Map<String, dynamic>>(
+      '/transactions',
+      query: {'status': 'confirmed', 'pageSize': limit, 'sort': 'occurredAt:desc'},
+      cancelToken: cancel,
+    );
     return (page['items'] as List).map((t) => TransactionItem.fromJson(t as Map<String, dynamic>)).toList();
   }
 

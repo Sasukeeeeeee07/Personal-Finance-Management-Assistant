@@ -38,7 +38,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     try {
       await ref.read(authControllerProvider.notifier).signIn(_email.text, _password.text);
     } on ApiError catch (e) {
-      if (mounted) setState(() => _error = e.kind == ApiErrorKind.unauthorized ? 'That email and password don’t match. Check them, or reset your password.' : e.message);
+      if (mounted) {
+        setState(() => _error = e.kind == ApiErrorKind.unauthorized ? 'That email and password don’t match. Check them, or reset your password.' : e.message);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }

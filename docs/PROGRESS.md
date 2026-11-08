@@ -22,8 +22,9 @@ Last updated: 2026-11-08 · Evidence for every "tested" claim is in [TEST_REPORT
 
 | Item | Status | Evidence |
 |---|---|---|
-| GitHub remote setup | **Not done** | No remote configured; needs the product owner |
-| PostgreSQL 16 CI verification | **Not done** | Workflow ready (`.github/workflows/ci.yml`) but never run — depends on the remote. Real Postgres validated on **17.11 locally** only |
+| GitHub remote setup | **Done** | https://github.com/Sasukeeeeeee07/Personal-Finance-Management-Assistant (`main` pushed by the product owner) |
+| GitHub Actions CI | **Configured, not yet run** | `.github/workflows/ci.yml` with `backend`, `postgresql`, `flutter` jobs on push and pull request (branch `ci/github-actions`) |
+| PostgreSQL 16 CI verification | **Not done** | Runs in the `postgresql` job; not claimed until a run passes. Real Postgres validated on **17.11 locally** only |
 | Flutter Android debug APK build | **Done** | `flutter build apk --debug` (clean build) succeeded on 2026-11-08 with the dashboard code: `build/app/outputs/flutter-apk/app-debug.apk`, 150.7 MB. Incremental builds fail locally because of spaces in the path (KI-021) |
 | Android emulator runtime verification | **Not done** | Android SDK `cmdline-tools` missing; app not yet launched on an emulator or device (KI-017) |
 

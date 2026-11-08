@@ -18,14 +18,7 @@ enum ApiErrorKind {
 /// Structured error built from the backend's uniform error body
 /// `{ statusCode, code, message, fields?, details? }` or from a transport failure.
 class ApiError implements Exception {
-  const ApiError({
-    required this.kind,
-    required this.message,
-    this.statusCode,
-    this.code,
-    this.fields = const {},
-    this.details,
-  });
+  const ApiError({required this.kind, required this.message, this.statusCode, this.code, this.fields = const {}, this.details});
 
   final ApiErrorKind kind;
   final String message;
@@ -95,9 +88,8 @@ class ApiError implements Exception {
     return ApiErrorKind.unknown;
   }
 
-  static String _defaultMessage(int status) => status >= 500
-      ? 'Something went wrong on our side. Please try again.'
-      : 'Something went wrong. Please try again.';
+  static String _defaultMessage(int status) =>
+      status >= 500 ? 'Something went wrong on our side. Please try again.' : 'Something went wrong. Please try again.';
 
   @override
   String toString() => 'ApiError($kind, $statusCode, $code, $message)';

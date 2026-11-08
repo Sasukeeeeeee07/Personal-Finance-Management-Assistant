@@ -41,15 +41,15 @@ class CurrentUser {
   }
 
   factory CurrentUser.fromJson(Map<String, dynamic> j) => CurrentUser(
-        id: j['id'] as String,
-        email: j['email'] as String,
-        fullName: j['fullName'] as String,
-        emailVerified: j['emailVerified'] as bool,
-        platformRole: j['platformRole'] as String?,
-        activeOrganizationId: j['activeOrganizationId'] as String,
-        organizations: (j['organizations'] as List).map((o) => Membership.fromJson(o as Map<String, dynamic>)).toList(),
-        permissions: (j['permissions'] as List).cast<String>(),
-      );
+    id: j['id'] as String,
+    email: j['email'] as String,
+    fullName: j['fullName'] as String,
+    emailVerified: j['emailVerified'] as bool,
+    platformRole: j['platformRole'] as String?,
+    activeOrganizationId: j['activeOrganizationId'] as String,
+    organizations: (j['organizations'] as List).map((o) => Membership.fromJson(o as Map<String, dynamic>)).toList(),
+    permissions: (j['permissions'] as List).cast<String>(),
+  );
 }
 
 class ActiveSession {

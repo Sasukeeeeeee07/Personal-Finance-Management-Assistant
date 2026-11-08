@@ -1,72 +1,165 @@
 name: CI
+
 on:
   push:
-    branches: [main, develop]
   pull_request:
 
+# A newer push to the same branch or PR cancels the older run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  backend-postgres:
-    name: Backend on PostgreSQL 16
+  backend:
+    name: Backend (Node 20, tests + build)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install (from lockfile)
+        run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Tests (embedded PGlite database)
+        run: npm test -- --ci
+
+      - name: Build
+        run: npm run build
+
+  postgresql:
+    name: PostgreSQL 16 (migrations + integration tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: backend
     services:
       postgres:
-        image: postgres:16-alpine
-        env: { POSTGRES_USER: pfm, POSTGRES_PASSWORD: pfm, POSTGRES_DB: pfm }
-        ports: ["5432:5432"]
+        image: postgres:16
+        env:
+          POSTGRES_USER: pfm
+          POSTGRES_PASSWORD: pfm
+          POSTGRES_DB: pfm
+          POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U pfm -d pfm"
-          --health-interval 5s --health-timeout 5s --health-retries 20
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     env:
+      PGHOST: localhost
+      PGUSER: pfm
+      PGPASSWORD: pfm
+      PGDATABASE: pfm
       DATABASE_URL: postgres://pfm:pfm@localhost:5432/pfm
       TEST_DATABASE_URL: postgres://pfm:pfm@localhost:5432/pfm
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm, cache-dependency-path: backend/package-lock.json }
-      - run: npm ci
-      - name: Type-check
-        run: npm run lint
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install (from lockfile)
+        run: npm ci
+
+      - name: Ensure psql client is available
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+
       - name: Wait for PostgreSQL
         run: |
-          for i in $(seq 1 30); do pg_isready -h localhost -U pfm -d pfm && exit 0; sleep 2; done
-          echo "PostgreSQL did not become ready" >&2; exit 1
-      - name: Apply migrations
-        run: npm run migrate
-      - name: Roll back and re-apply the latest migration
-        run: npm run migrate -- --down && npm run migrate
-      - name: Unit, integration and constraint tests on PostgreSQL
-        run: npm test -- --ci
-      - run: npm run build
+          for i in $(seq 1 30); do
+            pg_isready -h localhost -U pfm -d pfm && exit 0
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready"
+          exit 1
 
-  mobile:
-    name: Flutter analyze, test and build
+      - name: Check server version and encoding
+        run: |
+          psql -tAc "SELECT version()"
+          enc=$(psql -tAc "SHOW server_encoding")
+          echo "server_encoding=$enc"
+          if [ "$enc" != "UTF8" ]; then
+            echo "::error::Database encoding is $enc; UTF8 is required"
+            exit 1
+          fi
+
+      - name: Confirm the database starts empty
+        run: |
+          count=$(psql -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'")
+          echo "tables in public schema: $count"
+          if [ "$count" != "0" ]; then
+            echo "::error::Expected a clean database"
+            exit 1
+          fi
+
+      - name: Apply all migrations to the clean database
+        run: npm run migrate
+
+      - name: Verify migrations were recorded
+        run: |
+          psql -c "SELECT name, applied_at FROM _migrations ORDER BY name"
+          applied=$(psql -tAc "SELECT count(*) FROM _migrations")
+          expected=$(ls src/database/migrations/*.ts | wc -l)
+          echo "applied=$applied expected=$expected"
+          if [ "$applied" != "$expected" ]; then
+            echo "::error::Applied $applied of $expected migrations"
+            exit 1
+          fi
+
+      - name: Roll back the latest migration and re-apply it
+        run: npm run migrate -- --down && npm run migrate
+
+      - name: Integration tests against real PostgreSQL
+        run: npm test -- --ci
+
+  flutter:
+    name: Flutter (format, analyze, test, web build)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: mobile
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.35.7', channel: stable, cache: true }
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
-      - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '17' }
-      - run: flutter build apk --debug
 
-  backend-pglite:
-    name: Backend on PGlite (local dev path)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: npm, cache-dependency-path: backend/package-lock.json }
-      - run: npm ci
-      - run: npm test -- --ci
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.7
+          channel: stable
+          cache: true
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      - name: flutter test
+        run: flutter test
+
+      - name: flutter build web
+        run: flutter build web --release

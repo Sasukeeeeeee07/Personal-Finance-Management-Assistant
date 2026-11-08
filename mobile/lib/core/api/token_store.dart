@@ -6,8 +6,7 @@ class TokenPair {
   final String accessToken;
   final String refreshToken;
 
-  factory TokenPair.fromJson(Map<String, dynamic> json) =>
-      TokenPair(accessToken: json['accessToken'] as String, refreshToken: json['refreshToken'] as String);
+  factory TokenPair.fromJson(Map<String, dynamic> json) => TokenPair(accessToken: json['accessToken'] as String, refreshToken: json['refreshToken'] as String);
 }
 
 /// Where session tokens live. Never logged, never kept outside this store.
@@ -20,12 +19,13 @@ abstract class TokenStore {
 /// Android Keystore / iOS Keychain backed storage.
 class SecureTokenStore implements TokenStore {
   SecureTokenStore([FlutterSecureStorage? storage])
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              // v10 encrypts with Android Keystore-backed ciphers by default.
-              aOptions: AndroidOptions(),
-              iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
-            );
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            // v10 encrypts with Android Keystore-backed ciphers by default.
+            aOptions: AndroidOptions(),
+            iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+          );
 
   final FlutterSecureStorage _storage;
   static const _access = 'pfm.access_token';

@@ -1,5 +1,6 @@
 import { AuditService } from '../src/audit/audit.service';
-import { category, createTestApp, now, registerUser, TestApp, TestUser } from './helpers';
+import { addDays } from '../src/common/dates';
+import { category, createTestApp, now, registerUser, setCommitmentsCreatedAt, TestApp, TestUser } from './helpers';
 
 /** Tests for the Priority 3 gate review (B1–B5, E). */
 const ist = (date: string, time = '12:00:00') => `${date}T${time}+05:30`;
@@ -354,17 +355,29 @@ describe('B5 · Forecast v2', () => {
   });
 
   it('does not double-count recurring expenses, commitments or planned spending', async () => {
+    // Every date is derived from the explicit forecast date, never from the machine clock (KI-023).
+    const AS_OF = '2026-11-08';
+    const day = (offset: number) => addDays(AS_OF, offset);
     const u = await registerUser(t);
     const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '50000', trackingStartDate: '2026-01-01' }).expect(201)).body;
-    await u.post('/transactions', { type: 'expense', amount: '649', accountId: bank.id, merchant: 'Netflix', isRecurring: true, occurredAt: ist('2026-10-12') }).expect(201);
-    await u.post('/commitments', { name: 'Netflix', amount: '649', accountId: bank.id, frequency: 'monthly', dueDate: '2026-11-12' }).expect(201);
-    await u.post('/transactions', { type: 'expense', amount: '9000', accountId: bank.id, isPlanned: true, occurredAt: ist('2026-11-02') }).expect(201);
-    await u.post('/transactions', { type: 'expense', amount: '300', accountId: bank.id, occurredAt: ist('2026-11-05') }).expect(201);
-    const f = (await u.get('/forecast/month-end?asOf=2026-11-08').expect(200)).body;
+    await u.post('/transactions', { type: 'expense', amount: '649', accountId: bank.id, merchant: 'Netflix', isRecurring: true, occurredAt: ist(day(-27)) }).expect(201); // 12 Oct
+    await u.post('/commitments', { name: 'Netflix', amount: '649', accountId: bank.id, frequency: 'monthly', dueDate: day(4) }).expect(201); // 12 Nov
+    await u.post('/transactions', { type: 'expense', amount: '9000', accountId: bank.id, isPlanned: true, occurredAt: ist(day(-6)) }).expect(201); // 2 Nov
+    await u.post('/transactions', { type: 'expense', amount: '300', accountId: bank.id, occurredAt: ist(day(-3)) }).expect(201); // 5 Nov
+    // The commitment existed on the forecast date, whatever day the suite actually runs.
+    await setCommitmentsCreatedAt(t, u, ist(AS_OF, '08:00:00'));
+    const f = (await u.get(`/forecast/month-end?asOf=${AS_OF}`).expect(200)).body;
     expect(f.expectedRecurringExpenses.items).toEqual([]);
     expect(f.scheduledPayments.items).toEqual([{ name: 'Netflix', amount: '649.00', date: '2026-11-12' }]);
     expect(f.variableSpending).toMatchObject({ method: 'simple_average', dailyAverage: '100.00' }); // 300 over 3 days; the planned 9,000 is excluded
     expect(f.assumptions.join(' ')).toContain('(Netflix) are counted once');
+
+    // The failure mode behind KI-023: a commitment created after the forecast date did not exist then,
+    // so a historical forecast must not schedule it, and the recurring expense is expected instead.
+    await setCommitmentsCreatedAt(t, u, ist(day(1), '08:00:00'));
+    const before = (await u.get(`/forecast/month-end?asOf=${AS_OF}`).expect(200)).body;
+    expect(before.scheduledPayments.items).toEqual([]);
+    expect(before.expectedRecurringExpenses.items).toEqual([{ name: 'Netflix', amount: '649.00', date: '2026-11-12' }]);
   });
 });
 

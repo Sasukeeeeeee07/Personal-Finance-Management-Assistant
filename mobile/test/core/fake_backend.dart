@@ -34,7 +34,9 @@ class FakeBackend implements HttpClientAdapter {
       refreshCalls++;
       await Future<void>.delayed(refreshDelay);
       final body = await _body(requestStream);
-      if (body['refreshToken'] != validRefresh) return _json(401, {'statusCode': 401, 'code': 'unauthorized', 'message': 'Your session has ended. Sign in again.'});
+      if (body['refreshToken'] != validRefresh) {
+        return _json(401, {'statusCode': 401, 'code': 'unauthorized', 'message': 'Your session has ended. Sign in again.'});
+      }
       generation++;
       validAccess = 'access-$generation';
       validRefresh = 'refresh-$generation';
@@ -56,8 +58,13 @@ class FakeBackend implements HttpClientAdapter {
     return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
   }
 
-  ResponseBody _json(int status, Object? body) =>
-      ResponseBody.fromString(jsonEncode(body), status, headers: {Headers.contentTypeHeader: [Headers.jsonContentType]});
+  ResponseBody _json(int status, Object? body) => ResponseBody.fromString(
+    jsonEncode(body),
+    status,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
 
   @override
   void close({bool force = false}) {}

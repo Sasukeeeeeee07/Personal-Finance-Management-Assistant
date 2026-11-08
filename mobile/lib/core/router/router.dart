@@ -59,11 +59,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => HomeShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [GoRoute(path: Routes.home, builder: (_, __) => const DashboardScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: Routes.profile, builder: (_, __) => const ProfileScreen())]),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.home, builder: (_, __) => const DashboardScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.profile, builder: (_, __) => const ProfileScreen())],
+          ),
         ],
       ),
-      GoRoute(path: '/transactions/:id', builder: (_, state) => TransactionDetailScreen(id: state.pathParameters['id']!)),
+      GoRoute(
+        path: '/transactions/:id',
+        builder: (_, state) => TransactionDetailScreen(id: state.pathParameters['id']!),
+      ),
     ],
   );
 });

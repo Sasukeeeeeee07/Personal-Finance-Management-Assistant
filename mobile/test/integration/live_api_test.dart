@@ -47,12 +47,20 @@ void main() {
     final store = MemoryTokenStore();
     final client = ApiClient(baseUrl: liveUrl, tokens: store);
     final auth = AuthApi(client);
-    await store.write(await auth.register(fullName: 'Dashboard Test', email: 'dash-${DateTime.now().microsecondsSinceEpoch}@example.com', password: 'sturdy-password-1'));
+    await store.write(
+      await auth.register(fullName: 'Dashboard Test', email: 'dash-${DateTime.now().microsecondsSinceEpoch}@example.com', password: 'sturdy-password-1'),
+    );
     final acct = await client.post<Map<String, dynamic>>('/accounts', body: {'name': 'Bank', 'type': 'savings', 'openingBalance': '30000'});
     await client.post<dynamic>('/budgets', body: {'name': 'All', 'period': 'monthly', 'amount': '20000'});
-    await client.post<dynamic>('/commitments', body: {'name': 'Rent', 'amount': '8000', 'accountId': acct['id'], 'frequency': 'monthly', 'dueDate': '2099-01-01'});
-    final tx = await client.post<Map<String, dynamic>>('/transactions',
-        body: {'type': 'expense', 'amount': '250', 'accountId': acct['id'], 'merchant': 'Zomato', 'occurredAt': DateTime.now().toUtc().toIso8601String()}, idempotencyKey: ApiClient.newIdempotencyKey());
+    await client.post<dynamic>(
+      '/commitments',
+      body: {'name': 'Rent', 'amount': '8000', 'accountId': acct['id'], 'frequency': 'monthly', 'dueDate': '2099-01-01'},
+    );
+    final tx = await client.post<Map<String, dynamic>>(
+      '/transactions',
+      body: {'type': 'expense', 'amount': '250', 'accountId': acct['id'], 'merchant': 'Zomato', 'occurredAt': DateTime.now().toUtc().toIso8601String()},
+      idempotencyKey: ApiClient.newIdempotencyKey(),
+    );
 
     final api = DashboardApi(client);
     final summary = await api.summary();
@@ -75,7 +83,9 @@ void main() {
     final store = MemoryTokenStore();
     final client = ApiClient(baseUrl: liveUrl, tokens: store);
     final auth = AuthApi(client);
-    await store.write(await auth.register(fullName: 'Money Test', email: 'money-${DateTime.now().microsecondsSinceEpoch}@example.com', password: 'sturdy-password-1'));
+    await store.write(
+      await auth.register(fullName: 'Money Test', email: 'money-${DateTime.now().microsecondsSinceEpoch}@example.com', password: 'sturdy-password-1'),
+    );
     final summary = await client.get<Map<String, dynamic>>('/dashboard/summary');
     for (final key in ['totalBalance', 'reserved', 'availableToSpend', 'creditCardOutstanding']) {
       expect(summary[key], isA<String>());

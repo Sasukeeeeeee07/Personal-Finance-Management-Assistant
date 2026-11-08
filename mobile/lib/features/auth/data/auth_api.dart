@@ -12,8 +12,8 @@ class AuthApi {
       TokenPair.fromJson(await _client.post<Map<String, dynamic>>('/auth/login', body: {'email': email, 'password': password}, auth: false));
 
   Future<TokenPair> register({required String fullName, required String email, required String password}) async => TokenPair.fromJson(
-        await _client.post<Map<String, dynamic>>('/auth/register', body: {'fullName': fullName, 'email': email, 'password': password}, auth: false),
-      );
+    await _client.post<Map<String, dynamic>>('/auth/register', body: {'fullName': fullName, 'email': email, 'password': password}, auth: false),
+  );
 
   Future<void> forgotPassword(String email) => _client.post<dynamic>('/auth/forgot-password', body: {'email': email}, auth: false);
 

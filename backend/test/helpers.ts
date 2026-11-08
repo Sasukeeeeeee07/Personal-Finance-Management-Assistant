@@ -65,3 +65,16 @@ export async function category(u: TestUser, name: string): Promise<string> {
 }
 
 export const now = () => new Date().toISOString();
+
+/**
+ * Commitments and reservations get `created_at = now()` from the database and the API cannot set it,
+ * but historical forecasts only count records that existed by the end of `asOf`. Date-pinned forecast
+ * tests use this to place a user's commitments and reservations at a fixed moment, so the result does
+ * not depend on the day the suite runs (KI-023). Test-data setup only; application logic is untouched.
+ */
+export async function setCommitmentsCreatedAt(t: TestApp, u: TestUser, moment: string): Promise<void> {
+  const owner = t.db.selectFrom('users').select('id').where('email', '=', u.email);
+  const at = new Date(moment);
+  await t.db.updateTable('financial_commitments').set({ created_at: at, updated_at: at }).where('owner_id', 'in', owner).execute();
+  await t.db.updateTable('money_reservations').set({ created_at: at, updated_at: at }).where('owner_id', 'in', owner).execute();
+}

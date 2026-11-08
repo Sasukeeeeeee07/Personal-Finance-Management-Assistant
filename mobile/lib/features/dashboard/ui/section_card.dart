@@ -56,12 +56,20 @@ class SectionCard<T> extends StatelessWidget {
             Row(
               children: [
                 if (icon != null) ...[Icon(icon, size: 20, color: scheme.primary), const SizedBox(width: Space.sm)],
-                Expanded(child: Semantics(header: true, child: Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600)))),
+                Expanded(
+                  child: Semantics(
+                    header: true,
+                    child: Text(title, style: text.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  ),
+                ),
                 if (trailing != null) trailing!,
               ],
             ),
             const SizedBox(height: Space.md),
-            AnimatedSwitcher(duration: const Duration(milliseconds: 200), child: KeyedSubtree(key: ValueKey(value.hasValue), child: body)),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: KeyedSubtree(key: ValueKey(value.hasValue), child: body),
+            ),
           ],
         ),
       ),
@@ -144,7 +152,11 @@ class _Skeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (var i = 0; i < lines; i++) ...[
-            Container(height: 14, width: i.isEven ? double.infinity : 180, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(Radii.sm))),
+            Container(
+              height: 14,
+              width: i.isEven ? double.infinity : 180,
+              decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(Radii.sm)),
+            ),
             if (i < lines - 1) const SizedBox(height: Space.md),
           ],
         ],

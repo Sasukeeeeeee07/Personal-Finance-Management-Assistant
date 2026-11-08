@@ -30,8 +30,12 @@ class FinanceColors extends ThemeExtension<FinanceColors> {
   static const dark = FinanceColors(positive: Color(0xFF7DDBA4), negative: Color(0xFFF2B8B5), reserved: Color(0xFFCFBCFF), warning: Color(0xFFF5C35B));
 
   @override
-  FinanceColors copyWith({Color? positive, Color? negative, Color? reserved, Color? warning}) =>
-      FinanceColors(positive: positive ?? this.positive, negative: negative ?? this.negative, reserved: reserved ?? this.reserved, warning: warning ?? this.warning);
+  FinanceColors copyWith({Color? positive, Color? negative, Color? reserved, Color? warning}) => FinanceColors(
+    positive: positive ?? this.positive,
+    negative: negative ?? this.negative,
+    reserved: reserved ?? this.reserved,
+    warning: warning ?? this.warning,
+  );
 
   @override
   FinanceColors lerp(FinanceColors? other, double t) => other == null
@@ -66,15 +70,24 @@ abstract final class AppTheme {
         floatingLabelBehavior: FloatingLabelBehavior.always,
       ),
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md))),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+        ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md))),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.lg), side: BorderSide(color: scheme.outlineVariant)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Radii.lg),
+          side: BorderSide(color: scheme.outlineVariant),
+        ),
       ),
     );
   }
