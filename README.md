@@ -3,7 +3,8 @@
 Allocate first. Spend second. A personal finance platform that always shows what you have, what is already committed, and what you can actually spend.
 
 - Plan: [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
-- Status: [docs/PROGRESS.md](docs/PROGRESS.md)
+- Status: [docs/PROGRESS.md](docs/PROGRESS.md) · Tests: [docs/TEST_REPORT.md](docs/TEST_REPORT.md) · Issues: [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)
+- Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · Decisions: [docs/DECISIONS.md](docs/DECISIONS.md) · Reviewer handoff: [docs/AI_HANDOFF.md](docs/AI_HANDOFF.md)
 
 ## Backend
 
@@ -13,7 +14,8 @@ Requires Node.js 20+.
 cd backend
 npm install
 cp .env.example .env     # then set JWT_ACCESS_SECRET
-npm test                 # 35 tests on embedded Postgres (PGlite)
+npm test                 # 70 tests on embedded Postgres (PGlite)
+TEST_DATABASE_URL=postgres://user:pass@host:5432/db npm test   # same suite on real PostgreSQL
 npm run dev              # http://localhost:4000/api/v1, docs at /api/docs
 ```
 
@@ -22,6 +24,7 @@ With `DATABASE_URL` empty, the API uses embedded PGlite stored in `PGLITE_DATA_D
 ```bash
 docker compose up -d     # Postgres 16 + Redis 7
 DATABASE_URL=postgres://pfm:pfm@localhost:5432/pfm npm run migrate
+DATABASE_URL=... npm run migrate -- --down   # roll back the latest migration
 ```
 
 Production refuses to start without `DATABASE_URL` and a JWT secret of at least 32 characters.
