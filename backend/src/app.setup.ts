@@ -3,6 +3,17 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import type { AppConfig } from './config/env';
 
+const DEFAULT_CODES: Record<number, string> = {
+  400: 'bad_request',
+  401: 'unauthorized',
+  403: 'forbidden',
+  404: 'not_found',
+  409: 'conflict',
+  413: 'payload_too_large',
+  422: 'unprocessable',
+  429: 'rate_limited',
+};
+
 /** Never leak internals (SQL, stack traces, financial payloads) in error responses or logs. */
 @Catch()
 class SafeExceptionFilter implements ExceptionFilter {
@@ -11,8 +22,13 @@ class SafeExceptionFilter implements ExceptionFilter {
     const res = host.switchToHttp().getResponse();
     const req = host.switchToHttp().getRequest();
     if (exception instanceof HttpException) {
-      const body = exception.getResponse();
-      res.status(exception.getStatus()).json(typeof body === 'string' ? { statusCode: exception.getStatus(), message: body } : body);
+      // Every error has the same shape: { statusCode, code, message, [fields], [details] }.
+      const status = exception.getStatus();
+      const raw = exception.getResponse() as string | Record<string, unknown>;
+      const body: Record<string, unknown> = typeof raw === 'string' ? { message: raw } : { ...raw };
+      delete (body as any).error;
+      if (Array.isArray(body.message)) body.message = body.message.join(' ');
+      res.status(status).json({ statusCode: status, code: body.code ?? DEFAULT_CODES[status] ?? 'error', ...body, ...(status === 429 && { message: 'Too many requests. Wait a moment and try again.' }) });
       return;
     }
     const err = exception as Error;
@@ -41,11 +57,18 @@ export function configureApp(app: INestApplication, config: AppConfig) {
   );
   app.useGlobalFilters(new SafeExceptionFilter());
 
+  SwaggerModule.setup('api/docs', app, buildOpenApiDocument(app));
+}
+
+export const API_CONTRACT_VERSION = '1.0.0';
+
+/** The OpenAPI document. Frozen copy: docs/api/openapi-v1.json (see docs/API_CONTRACT.md). */
+export function buildOpenApiDocument(app: INestApplication) {
   const doc = new DocumentBuilder()
     .setTitle('Personal Finance Manager API')
-    .setDescription('Allocate first. Spend second. Amounts are decimal strings in the account currency (INR by default).')
-    .setVersion('0.1.0')
+    .setDescription('Allocate first. Spend second. Amounts are decimal strings in the account currency (INR by default). Errors are { statusCode, code, message, fields?, details? }.')
+    .setVersion(API_CONTRACT_VERSION)
     .addBearerAuth()
     .build();
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, doc));
+  return SwaggerModule.createDocument(app, doc);
 }

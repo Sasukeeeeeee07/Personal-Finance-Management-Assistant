@@ -22,6 +22,7 @@ import { BudgetsService } from './budgets/budgets.service';
 import { GoalsController } from './goals/goals.controller';
 import { GoalsService } from './goals/goals.service';
 import { ForecastController, ForecastService } from './forecast/forecast.service';
+import { IdempotencyService } from './common/idempotency.service';
 
 @ApiTags('health')
 @Controller('health')
@@ -53,6 +54,7 @@ export function buildAppModule(config: AppConfig = loadConfig()) {
       BudgetsService,
       GoalsService,
       ForecastService,
+      IdempotencyService,
     ],
   })
   class AppModule {}

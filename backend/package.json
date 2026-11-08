@@ -8,7 +8,8 @@
     "dev": "ts-node src/main.ts",
     "migrate": "ts-node src/database/migrate.cli.ts",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
-    "lint": "tsc --noEmit -p tsconfig.json"
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "openapi:freeze": "node scripts/openapi-freeze.js"
   },
   "jest": {
     "moduleFileExtensions": [

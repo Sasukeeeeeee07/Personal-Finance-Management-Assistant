@@ -4,9 +4,13 @@ import * as m001 from './migrations/001_foundation';
 import * as m002 from './migrations/002_core_finance';
 import * as m003 from './migrations/003_reservations';
 import * as m004 from './migrations/004_budgets_goals';
+import * as m005 from './migrations/005_reservation_lifecycle';
+import * as m006 from './migrations/006_goal_allocation';
+import * as m007 from './migrations/007_account_tracking';
+import * as m008 from './migrations/008_idempotency';
 import { PERMISSION_DESCRIPTIONS, ROLE_DEFINITIONS } from '../rbac/permissions';
 
-const MIGRATIONS: { name: string; up: string; down?: string }[] = [m001, m002, m003, m004];
+const MIGRATIONS: { name: string; up: string; down?: string }[] = [m001, m002, m003, m004, m005, m006, m007, m008];
 
 // Prepared statements accept one command each; migrations contain no semicolons inside bodies.
 const statements = (script: string) => script.split(/;\s*\n/).map((s) => s.trim()).filter(Boolean);
@@ -39,6 +43,11 @@ export const SYSTEM_CATEGORIES: { name: string; kind: 'income' | 'expense'; esse
 ];
 
 export async function migrate(db: DB, log: (msg: string) => void = () => {}): Promise<void> {
+  // Names, notes and merchants are user text (₹, Hindi, emoji); a non-UTF-8 database would corrupt or reject them.
+  const enc = await sql<{ server_encoding: string }>`SHOW server_encoding`.execute(db);
+  if (enc.rows[0]?.server_encoding?.toUpperCase() !== 'UTF8') {
+    throw new Error(`Database encoding is ${enc.rows[0]?.server_encoding}; UTF8 is required. Create the database with ENCODING 'UTF8'.`);
+  }
   await sql`CREATE TABLE IF NOT EXISTS _migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`.execute(db);
   const applied = new Set((await db.selectFrom('_migrations').select('name').execute()).map((r) => r.name));
   for (const m of MIGRATIONS) {

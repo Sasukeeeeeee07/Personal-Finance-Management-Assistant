@@ -52,6 +52,7 @@ export interface BudgetFigures {
   dailyTarget: Decimal;
   thresholdsReached: number[];
   exceeded: boolean;
+  warningFrom: number | null;
   status: 'on_track' | 'warning' | 'exceeded';
 }
 
@@ -77,6 +78,9 @@ export function computeFigures(input: {
   const dailyTarget = daysLeft > 0 ? Decimal.max(remaining, 0).div(daysLeft).toDecimalPlaces(2, Decimal.ROUND_DOWN) : new Decimal(0);
   const thresholdsReached = input.thresholds.filter((t) => utilizationPercent.gte(t));
   const exceeded = input.spent.gt(limit);
+  // Health is a state, separate from threshold events: "warning" starts at the lowest configured threshold.
+  const warningFrom = input.thresholds.length ? Math.min(...input.thresholds) : null;
+  const warning = warningFrom !== null && utilizationPercent.gte(warningFrom);
   return {
     limit,
     carriedOver,
@@ -87,6 +91,7 @@ export function computeFigures(input: {
     dailyTarget,
     thresholdsReached,
     exceeded,
-    status: exceeded ? 'exceeded' : utilizationPercent.gte(75) ? 'warning' : 'on_track',
+    warningFrom,
+    status: exceeded ? 'exceeded' : warning ? 'warning' : 'on_track',
   };
 }

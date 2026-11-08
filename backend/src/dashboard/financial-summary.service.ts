@@ -41,7 +41,8 @@ export class FinancialSummaryService {
   }
 
   /**
-   * Money earmarked for savings goals (D-009). Goals kept in a non-liquid account (e.g. a fixed
+   * Money earmarked for savings goals in reserve mode (D-009, D-015). Track-only goals do not reduce
+   * available-to-spend. Goals kept in a non-liquid account (e.g. a fixed
    * deposit) are excluded because that money is already outside the liquid balance.
    */
   async goalAllocations(ownerId: string, db: Executor = this.db): Promise<Decimal> {
@@ -52,6 +53,7 @@ export class FinancialSummaryService {
       .select(sql<string>`COALESCE(SUM(c.amount), 0)`.as('total'))
       .where('g.owner_id', '=', ownerId)
       .where('g.status', '!=', 'archived')
+      .where('g.allocation_mode', '=', 'reserve')
       .where((eb) => eb.or([eb('g.account_id', 'is', null), eb('a.is_liquid', '=', true)]))
       .executeTakeFirstOrThrow();
     return money(r.total);
@@ -149,7 +151,7 @@ export class FinancialSummaryService {
           'Reserved money is a plan inside this app. It is not blocked or frozen at your bank.',
           'Transfers between your own accounts are not counted as income or expenses.',
           'Credit card dues are shown separately. Create a commitment for your card bill to reserve money for it.',
-          'Allocated is money saved for goals, except goals kept in a non-liquid account such as a fixed deposit.',
+          'Allocated is money saved in goals set to reserve, except goals kept in a non-liquid account such as a fixed deposit. Track-only goals are not subtracted.',
         ],
       },
     };

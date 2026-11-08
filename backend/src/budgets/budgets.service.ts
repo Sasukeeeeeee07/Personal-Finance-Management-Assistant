@@ -238,6 +238,7 @@ export class BudgetsService {
         thresholdsReached: f.thresholdsReached,
         exceeded: f.exceeded,
         health: f.status,
+        healthWarningFromPercent: f.warningFrom,
       },
     };
   }

@@ -1,0 +1,2520 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/accounts": {
+      "get": {
+        "operationId": "AccountsController_list",
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      },
+      "post": {
+        "operationId": "AccountsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{id}": {
+      "get": {
+        "operationId": "AccountsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      },
+      "patch": {
+        "operationId": "AccountsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      },
+      "delete": {
+        "operationId": "AccountsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/accounts/{id}/reconcile": {
+      "post": {
+        "operationId": "AccountsController_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_list",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "income",
+                "expense"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      },
+      "post": {
+        "operationId": "CategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "delete": {
+        "operationId": "CategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/api/v1/transactions": {
+      "get": {
+        "operationId": "TransactionsController_list",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense",
+                "transfer"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "confirmed",
+                "needs_review",
+                "duplicate",
+                "ignored",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "accountId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "occurredAt:desc",
+              "type": "string",
+              "enum": [
+                "occurredAt:desc",
+                "occurredAt:asc",
+                "amount:desc",
+                "amount:asc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "post": {
+        "operationId": "TransactionsController_create",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Client-generated key (8–128 chars). Replaying the same request with the same key returns the original result instead of creating a second transaction.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record income, an expense, or a transfer between your own accounts",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{id}": {
+      "get": {
+        "operationId": "TransactionsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "patch": {
+        "operationId": "TransactionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "delete": {
+        "operationId": "TransactionsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/transactions/{id}/history": {
+      "get": {
+        "operationId": "TransactionsController_history",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Audit history of every change to this transaction",
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/api/v1/commitments": {
+      "get": {
+        "operationId": "ReservationsController_listCommitments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "money-lock"
+        ]
+      },
+      "post": {
+        "operationId": "ReservationsController_createCommitment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommitmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a fixed commitment (rent, EMI, bills) and reserve money for its next due date",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/commitments/{id}": {
+      "delete": {
+        "operationId": "ReservationsController_cancelCommitment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a commitment and release its open reservation",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/reservations": {
+      "get": {
+        "operationId": "ReservationsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "reconciled",
+                "released",
+                "cancelled"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "money-lock"
+        ]
+      },
+      "post": {
+        "operationId": "ReservationsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reserve money for a one-off upcoming payment",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/reservations/{id}": {
+      "patch": {
+        "operationId": "ReservationsController_adjust",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change how much is set aside (partial reservations)",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/reservations/{id}/release": {
+      "post": {
+        "operationId": "ReservationsController_release",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Release an unused reservation back to available-to-spend",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/reservations/{id}/settlements": {
+      "get": {
+        "operationId": "ReservationsController_settlements",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every payment linked to this reservation, including reversed ones",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/reservations/{id}/settle": {
+      "post": {
+        "operationId": "ReservationsController_settle",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettleReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a reservation as paid by an existing transaction",
+        "tags": [
+          "money-lock"
+        ]
+      }
+    },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "operationId": "DashboardController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What you have, what is committed, and what you can actually spend",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/api/v1/organization/members": {
+      "get": {
+        "operationId": "OrganizationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "organization"
+        ]
+      },
+      "post": {
+        "operationId": "OrganizationsController_add",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/organization/members/{userId}": {
+      "delete": {
+        "operationId": "OrganizationsController_remove",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "organization"
+        ]
+      }
+    },
+    "/api/v1/budgets": {
+      "get": {
+        "operationId": "BudgetsController_list",
+        "parameters": [
+          {
+            "name": "asOf",
+            "required": false,
+            "in": "query",
+            "description": "Evaluate as of this date (YYYY-MM-DD). Defaults to today.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Active budgets with spending in the current period",
+        "tags": [
+          "budgets"
+        ]
+      },
+      "post": {
+        "operationId": "BudgetsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBudgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an overall or category budget (monthly, weekly or custom period)",
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/api/v1/budgets/alerts": {
+      "get": {
+        "operationId": "BudgetsController_alerts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Budget threshold and over-budget alerts, newest first",
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/api/v1/budgets/{id}": {
+      "get": {
+        "operationId": "BudgetsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "asOf",
+            "required": false,
+            "in": "query",
+            "description": "Evaluate as of this date (YYYY-MM-DD). Defaults to today.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "patch": {
+        "operationId": "BudgetsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBudgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "delete": {
+        "operationId": "BudgetsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive a budget (history is kept)",
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/api/v1/goals": {
+      "get": {
+        "operationId": "GoalsController_list",
+        "parameters": [
+          {
+            "name": "includeArchived",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "goals"
+        ]
+      },
+      "post": {
+        "operationId": "GoalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/goals/{id}": {
+      "get": {
+        "operationId": "GoalsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "goals"
+        ]
+      },
+      "patch": {
+        "operationId": "GoalsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGoalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/goals/{id}/contributions": {
+      "post": {
+        "operationId": "GoalsController_contribute",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "idempotency-key",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Client-generated key; replays return the original result.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set money aside for a goal, or take some out. Not income or expense.",
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/goals/{id}/contributions/{contributionId}/reverse": {
+      "post": {
+        "operationId": "GoalsController_reverse",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contributionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reverse a contribution or withdrawal by recording its opposite",
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/goals/{id}/complete": {
+      "post": {
+        "operationId": "GoalsController_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/goals/{id}/archive": {
+      "post": {
+        "operationId": "GoalsController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive a goal and release its savings back to available-to-spend",
+        "tags": [
+          "goals"
+        ]
+      }
+    },
+    "/api/v1/forecast/month-end": {
+      "get": {
+        "operationId": "ForecastController_monthEnd",
+        "parameters": [
+          {
+            "name": "asOf",
+            "required": false,
+            "in": "query",
+            "description": "Evaluate as of this date (YYYY-MM-DD). Defaults to today.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Estimated month-end balance with the method, assumptions and confidence behind it",
+        "tags": [
+          "forecast"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/google": {
+      "post": {
+        "operationId": "AuthController_google",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthTokensResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/resend-verification": {
+      "post": {
+        "operationId": "AuthController_resendVerification",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "operationId": "AuthController_sessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/{id}": {
+      "delete": {
+        "operationId": "AuthController_revokeSession",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Personal Finance Manager API",
+    "description": "Allocate first. Spend second. Amounts are decimal strings in the account currency (INR by default). Errors are { statusCode, code, message, fields?, details? }.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateAccountDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "HDFC Savings"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "savings",
+              "current",
+              "cash",
+              "upi_bank",
+              "credit_card",
+              "wallet",
+              "fixed_deposit",
+              "other"
+            ]
+          },
+          "institutionName": {
+            "type": "string",
+            "example": "HDFC Bank"
+          },
+          "accountMask": {
+            "type": "string",
+            "description": "Last 2–4 digits only. Never send a full account or card number.",
+            "example": "4821"
+          },
+          "currency": {
+            "type": "string",
+            "example": "INR",
+            "default": "INR"
+          },
+          "openingBalance": {
+            "type": "string",
+            "description": "Current balance when you start tracking. For credit cards, enter the amount you currently owe.",
+            "example": "30000.00"
+          },
+          "openingDate": {
+            "type": "string",
+            "description": "When the account was opened at the bank (informational).",
+            "example": "2019-04-01"
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "description": "The date your opening balance applies from. Transactions before this date can only be added as historical statement imports. Defaults to today.",
+            "example": "2026-11-01"
+          },
+          "isLiquid": {
+            "type": "boolean",
+            "description": "Override whether this counts as spendable money (defaults by type)."
+          },
+          "creditLimit": {
+            "type": "string",
+            "example": "100000.00"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      },
+      "UpdateAccountDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "institutionName": {
+            "type": "string"
+          },
+          "accountMask": {
+            "type": "string"
+          },
+          "isLiquid": {
+            "type": "boolean"
+          },
+          "creditLimit": {
+            "type": "string"
+          },
+          "archived": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ReconcileAccountDto": {
+        "type": "object",
+        "properties": {
+          "actualBalance": {
+            "type": "string",
+            "description": "The balance your bank or wallet shows right now. For credit cards, the amount owed.",
+            "example": "29450.00"
+          }
+        },
+        "required": [
+          "actualBalance"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ]
+          },
+          "isEssential": {
+            "type": "boolean"
+          },
+          "icon": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ]
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "transfer"
+            ],
+            "description": "Use transfer for moving money between your own accounts, including paying a credit card bill."
+          },
+          "amount": {
+            "type": "string",
+            "example": "450.00"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Account the money comes from (expense/transfer) or goes into (income)."
+          },
+          "destinationAccountId": {
+            "type": "string",
+            "description": "Required for transfers."
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "example": "2026-11-08T13:45:00+05:30"
+          },
+          "merchant": {
+            "type": "string",
+            "example": "Zomato"
+          },
+          "sourceName": {
+            "type": "string",
+            "description": "Income source, e.g. employer or client",
+            "example": "Acme Pvt Ltd"
+          },
+          "description": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "example": "upi"
+          },
+          "externalReference": {
+            "type": "string",
+            "description": "Bank/UPI reference number. Used to prevent counting the same transaction twice."
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "sms",
+              "notification",
+              "statement_import",
+              "account_aggregator"
+            ],
+            "default": "manual"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "needs_review",
+              "ignored",
+              "failed"
+            ],
+            "default": "confirmed"
+          },
+          "isPlanned": {
+            "type": "boolean"
+          },
+          "isEssential": {
+            "type": "boolean"
+          },
+          "isRecurring": {
+            "type": "boolean"
+          },
+          "historical": {
+            "type": "boolean",
+            "description": "Explicit historical import: a statement line dated before the account tracking start date. Counted in analytics, never in the balance (the opening balance already includes it). Only for statement_import / account_aggregator sources."
+          },
+          "reservationId": {
+            "type": "string",
+            "description": "Pay a reserved commitment with this expense. The reservation is released in the same step, so money is not deducted twice."
+          },
+          "acceptReservationDifference": {
+            "type": "boolean",
+            "description": "Required when the amount differs from the reservation: confirms you reviewed the difference."
+          }
+        },
+        "required": [
+          "type",
+          "amount",
+          "accountId",
+          "occurredAt"
+        ]
+      },
+      "UpdateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "description": "The version you are editing (optimistic locking)."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense",
+              "transfer"
+            ]
+          },
+          "amount": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": "string"
+          },
+          "destinationAccountId": {
+            "type": "object",
+            "nullable": true
+          },
+          "categoryId": {
+            "type": "object",
+            "nullable": true
+          },
+          "occurredAt": {
+            "type": "string"
+          },
+          "merchant": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "paymentMethod": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "needs_review",
+              "ignored",
+              "failed"
+            ]
+          },
+          "isPlanned": {
+            "type": "boolean"
+          },
+          "isEssential": {
+            "type": "boolean"
+          },
+          "isRecurring": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "CreateCommitmentDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Rent"
+          },
+          "amount": {
+            "type": "string",
+            "example": "8000.00"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Account the payment will be made from."
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "once",
+              "weekly",
+              "monthly",
+              "yearly",
+              "custom_days"
+            ]
+          },
+          "intervalCount": {
+            "type": "number",
+            "description": "Every N periods; for custom_days, the number of days.",
+            "default": 1
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2026-12-01"
+          },
+          "reminderDaysBefore": {
+            "type": "number",
+            "default": 3
+          },
+          "reserveAmount": {
+            "type": "string",
+            "description": "How much to set aside now. Defaults to the full amount; less = partial reservation.",
+            "example": "8000.00"
+          }
+        },
+        "required": [
+          "name",
+          "amount",
+          "accountId",
+          "frequency",
+          "dueDate"
+        ]
+      },
+      "CreateReservationDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Insurance premium"
+          },
+          "accountId": {
+            "type": "string"
+          },
+          "targetAmount": {
+            "type": "string",
+            "example": "12000.00"
+          },
+          "reservedAmount": {
+            "type": "string",
+            "description": "Defaults to targetAmount."
+          },
+          "dueDate": {
+            "type": "string",
+            "example": "2026-12-15"
+          }
+        },
+        "required": [
+          "name",
+          "accountId",
+          "targetAmount",
+          "dueDate"
+        ]
+      },
+      "AdjustReservationDto": {
+        "type": "object",
+        "properties": {
+          "reservedAmount": {
+            "type": "string",
+            "description": "New amount set aside (0 to target).",
+            "example": "5000.00"
+          }
+        },
+        "required": [
+          "reservedAmount"
+        ]
+      },
+      "SettleReservationDto": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "description": "An existing confirmed expense or transfer that paid this commitment."
+          },
+          "acceptDifference": {
+            "type": "boolean",
+            "description": "Confirm you reviewed a difference between the reserved and paid amount."
+          }
+        },
+        "required": [
+          "transactionId"
+        ]
+      },
+      "AddMemberDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "org_admin",
+              "standard_user"
+            ]
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ]
+      },
+      "CreateBudgetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Food"
+          },
+          "categoryId": {
+            "type": "string",
+            "description": "Leave empty for an overall spending limit."
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "weekly",
+              "custom"
+            ]
+          },
+          "periodDays": {
+            "type": "number",
+            "description": "Required for custom periods: length in days."
+          },
+          "amount": {
+            "type": "string",
+            "example": "4000.00"
+          },
+          "startDate": {
+            "type": "string",
+            "description": "First day of the first period. For monthly budgets, its day-of-month is the reset day. Defaults to the 1st of this month (monthly) or today.",
+            "example": "2026-11-01"
+          },
+          "rollover": {
+            "type": "boolean",
+            "description": "Carry the previous period's unused amount into the next period."
+          },
+          "alertThresholds": {
+            "example": [
+              50,
+              75,
+              90,
+              100
+            ],
+            "description": "Percent thresholds that trigger an alert (1–100).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "period",
+          "amount"
+        ]
+      },
+      "UpdateBudgetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "rollover": {
+            "type": "boolean"
+          },
+          "alertThresholds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateGoalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Emergency fund"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "emergency_fund",
+              "gadget",
+              "vacation",
+              "education",
+              "vehicle",
+              "savings",
+              "custom"
+            ],
+            "default": "custom"
+          },
+          "targetAmount": {
+            "type": "string",
+            "example": "100000.00"
+          },
+          "targetDate": {
+            "type": "string",
+            "example": "2027-06-30"
+          },
+          "monthlyContribution": {
+            "type": "string",
+            "example": "5000.00"
+          },
+          "priority": {
+            "type": "number",
+            "description": "1 = high, 2 = medium, 3 = low",
+            "default": 2
+          },
+          "accountId": {
+            "type": "string",
+            "description": "Account where this money is kept (optional)."
+          },
+          "allocationMode": {
+            "type": "string",
+            "enum": [
+              "track_only",
+              "reserve"
+            ],
+            "default": "track_only",
+            "description": "track_only (default): progress is tracked, available-to-spend is unchanged. reserve: saved money is set aside and reduces available-to-spend (unless kept in a non-liquid account)."
+          },
+          "initialAmount": {
+            "type": "string",
+            "description": "Amount already saved for this goal.",
+            "example": "10000.00"
+          }
+        },
+        "required": [
+          "name",
+          "targetAmount"
+        ]
+      },
+      "UpdateGoalDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "emergency_fund",
+              "gadget",
+              "vacation",
+              "education",
+              "vehicle",
+              "savings",
+              "custom"
+            ]
+          },
+          "targetAmount": {
+            "type": "string"
+          },
+          "targetDate": {
+            "type": "object",
+            "nullable": true
+          },
+          "monthlyContribution": {
+            "type": "object",
+            "nullable": true
+          },
+          "priority": {
+            "type": "number"
+          },
+          "accountId": {
+            "type": "object",
+            "nullable": true
+          },
+          "allocationMode": {
+            "type": "string",
+            "enum": [
+              "track_only",
+              "reserve"
+            ],
+            "description": "track_only (default): progress is tracked, available-to-spend is unchanged. reserve: saved money is set aside and reduces available-to-spend (unless kept in a non-liquid account)."
+          }
+        }
+      },
+      "ContributionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "contribution",
+              "withdrawal"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "example": "5000.00"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-11-08",
+            "description": "Defaults to today."
+          },
+          "note": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string",
+            "description": "Optional: the confirmed transfer that physically moved this money into (contribution) or out of (withdrawal) the goal's account. Its amount must match."
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "asha@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "correct-horse-42"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Asha Verma"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "fullName"
+        ]
+      },
+      "AuthTokensResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "accessTokenExpiresIn": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "accessTokenExpiresIn"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "GoogleLoginDto": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "description": "Google ID token from Google Sign-In"
+          }
+        },
+        "required": [
+          "idToken"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "EmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "LogoutDto": {
+        "type": "object",
+        "properties": {
+          "allDevices": {
+            "type": "boolean",
+            "description": "Sign out of every device"
+          }
+        }
+      }
+    }
+  }
+}

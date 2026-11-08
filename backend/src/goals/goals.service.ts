@@ -11,6 +11,7 @@ import { AccountsService } from '../accounts/accounts.service';
 import { AuditService } from '../audit/audit.service';
 import { FinancialSummaryService } from '../dashboard/financial-summary.service';
 import { ContributionDto, CreateGoalDto, UpdateGoalDto } from './goal.dto';
+import { IdempotencyService } from '../common/idempotency.service';
 
 type GoalRow = Selectable<FinancialGoalsTable>;
 
@@ -57,6 +58,7 @@ export class GoalsService {
     private readonly accounts: AccountsService,
     private readonly summary: FinancialSummaryService,
     private readonly audit: AuditService,
+    private readonly idempotency: IdempotencyService,
   ) {}
 
   async create(user: AuthUser, dto: CreateGoalDto) {
@@ -73,6 +75,7 @@ export class GoalsService {
           target_date: dto.targetDate ?? null,
           monthly_contribution: dto.monthlyContribution ? fmt(dto.monthlyContribution) : null,
           priority: dto.priority ?? 2,
+          allocation_mode: dto.allocationMode ?? 'track_only',
           account_id: dto.accountId ?? null,
           completed_at: null,
         })
@@ -80,7 +83,7 @@ export class GoalsService {
         .executeTakeFirstOrThrow();
       await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'financial_goal', entityId: g.id, action: 'created', after: g });
       if (dto.initialAmount && money(dto.initialAmount).gt(0)) {
-        await trx.insertInto('goal_contributions').values({ owner_id: user.userId, goal_id: g.id, amount: fmt(dto.initialAmount), contributed_on: today(), note: null, is_opening: true, transaction_id: null }).execute();
+        await trx.insertInto('goal_contributions').values({ owner_id: user.userId, goal_id: g.id, amount: fmt(dto.initialAmount), contributed_on: today(), note: null, is_opening: true, transaction_id: null, reverses_contribution_id: null }).execute();
         await this.syncCompletion(trx, g.id);
       }
       return { goal: await this.present(trx, await this.findOwned(trx, user.userId, g.id)), position: await this.position(trx, user.userId) };
@@ -99,7 +102,16 @@ export class GoalsService {
     const contributions = await this.db.selectFrom('goal_contributions').selectAll().where('goal_id', '=', id).orderBy('contributed_on', 'desc').orderBy('created_at', 'desc').execute();
     return {
       ...(await this.present(this.db, g)),
-      contributions: contributions.map((c) => ({ id: c.id, amount: c.amount, type: money(c.amount).isNegative() ? 'withdrawal' : 'contribution', date: c.contributed_on, note: c.note, transactionId: c.transaction_id })),
+      contributions: contributions.map((c) => ({
+        id: c.id,
+        amount: c.amount,
+        type: c.reverses_contribution_id ? 'reversal' : money(c.amount).isNegative() ? 'withdrawal' : 'contribution',
+        date: c.contributed_on,
+        note: c.note,
+        transactionId: c.transaction_id,
+        reversesContributionId: c.reverses_contribution_id,
+        reversed: contributions.some((x) => x.reverses_contribution_id === c.id),
+      })),
     };
   }
 
@@ -117,6 +129,7 @@ export class GoalsService {
           ...(dto.targetDate !== undefined && { target_date: dto.targetDate }),
           ...(dto.monthlyContribution !== undefined && { monthly_contribution: dto.monthlyContribution === null ? null : fmt(dto.monthlyContribution) }),
           ...(dto.priority !== undefined && { priority: dto.priority }),
+          ...(dto.allocationMode !== undefined && { allocation_mode: dto.allocationMode }),
           ...(dto.accountId !== undefined && { account_id: dto.accountId }),
           updated_at: new Date(),
         })
@@ -129,13 +142,18 @@ export class GoalsService {
     });
   }
 
-  async contribute(user: AuthUser, id: string, dto: ContributionDto) {
-    return this.db.transaction().execute(async (trx) => {
+  async contribute(user: AuthUser, id: string, dto: ContributionDto, idempotencyKey?: string) {
+    const { replayed, body } = await this.db.transaction().execute((trx) =>
+      this.idempotency.run(trx, user.userId, idempotencyKey, `POST /goals/${id}/contributions`, dto, () => this.contributeIn(trx, user, id, dto)),
+    );
+    return { ...body, idempotentReplay: replayed };
+  }
+
+  private async contributeIn(trx: Executor, user: AuthUser, id: string, dto: ContributionDto) {
       const g = await this.findOwned(trx, user.userId, id, true);
       if (g.status === 'archived') throw new DomainError('goal_archived', 'This goal is archived.', HttpStatus.CONFLICT);
       if (dto.transactionId) {
-        const t = await trx.selectFrom('transactions').select('id').where('id', '=', dto.transactionId).where('owner_id', '=', user.userId).where('deleted_at', 'is', null).executeTakeFirst();
-        if (!t) throw notFound('Transaction');
+        await this.assertBankMovement(trx, user.userId, g, dto);
       }
       const amount = money(dto.amount);
       if (dto.type === 'withdrawal') {
@@ -144,18 +162,64 @@ export class GoalsService {
       }
       const c = await trx
         .insertInto('goal_contributions')
-        .values({ owner_id: user.userId, goal_id: id, amount: fmt(dto.type === 'withdrawal' ? amount.neg() : amount), contributed_on: dto.date ?? today(), note: dto.note?.trim() || null, transaction_id: dto.transactionId ?? null })
+        .values({ owner_id: user.userId, goal_id: id, amount: fmt(dto.type === 'withdrawal' ? amount.neg() : amount), contributed_on: dto.date ?? today(), note: dto.note?.trim() || null, transaction_id: dto.transactionId ?? null, reverses_contribution_id: null })
         .returningAll()
         .executeTakeFirstOrThrow();
       await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'goal_contribution', entityId: c.id, action: dto.type, after: c });
       await this.syncCompletion(trx, id);
       return { goal: await this.present(trx, await this.findOwned(trx, user.userId, id)), position: await this.position(trx, user.userId) };
-    });
   }
 
   /** Mark a goal done before reaching the target (e.g. the user changed plans). */
   async complete(user: AuthUser, id: string) {
     return this.setStatus(user, id, 'completed');
+  }
+
+  /**
+   * Reverse a contribution or withdrawal by recording its exact opposite (history is never edited).
+   * A reversal cannot itself be reversed, and nothing can be reversed twice.
+   */
+  async reverseContribution(user: AuthUser, goalId: string, contributionId: string) {
+    return this.db.transaction().execute(async (trx) => {
+      const g = await this.findOwned(trx, user.userId, goalId, true);
+      if (g.status === 'archived') throw new DomainError('goal_archived', 'This goal is archived.', HttpStatus.CONFLICT);
+      const c = await trx.selectFrom('goal_contributions').selectAll().where('id', '=', contributionId).where('goal_id', '=', goalId).executeTakeFirst();
+      if (!c) throw notFound('Contribution');
+      if (c.reverses_contribution_id) throw new DomainError('cannot_reverse_reversal', 'This entry is already a reversal.', HttpStatus.CONFLICT);
+      const already = await trx.selectFrom('goal_contributions').select('id').where('reverses_contribution_id', '=', c.id).executeTakeFirst();
+      if (already) throw new DomainError('already_reversed', 'This entry was already reversed.', HttpStatus.CONFLICT);
+      const opposite = money(c.amount).neg();
+      if ((await this.saved(trx, goalId)).plus(opposite).isNegative()) {
+        throw new DomainError('reversal_exceeds_saved', 'Reversing this would take the goal below zero. Reverse the later withdrawals first.');
+      }
+      const r = await trx
+        .insertInto('goal_contributions')
+        .values({ owner_id: user.userId, goal_id: goalId, amount: fmt(opposite), contributed_on: today(), note: 'Reversal', is_opening: c.is_opening, transaction_id: null, reverses_contribution_id: c.id })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+      await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'goal_contribution', entityId: r.id, action: 'reversed', before: c, after: r });
+      await this.syncCompletion(trx, goalId);
+      return { goal: await this.present(trx, await this.findOwned(trx, user.userId, goalId)), position: await this.position(trx, user.userId) };
+    });
+  }
+
+  /**
+   * A linked bank movement must be a confirmed transfer into (contribution) or out of (withdrawal)
+   * the goal's own account for the same amount. Each transfer can back only one contribution
+   * (unique index), so progress cannot be counted twice.
+   */
+  private async assertBankMovement(trx: Executor, ownerId: string, g: GoalRow, dto: ContributionDto) {
+    if (!g.account_id) throw new DomainError('goal_has_no_account', 'Link this goal to an account before attaching a transfer.');
+    const t = await trx.selectFrom('transactions').selectAll().where('id', '=', dto.transactionId!).where('owner_id', '=', ownerId).where('deleted_at', 'is', null).executeTakeFirst();
+    if (!t) throw notFound('Transaction');
+    const intoGoal = t.destination_account_id === g.account_id;
+    const outOfGoal = t.account_id === g.account_id;
+    if (t.type !== 'transfer' || t.status !== 'confirmed' || (dto.type === 'contribution' ? !intoGoal : !outOfGoal)) {
+      throw new DomainError('invalid_bank_movement', dto.type === 'contribution' ? "Attach a confirmed transfer into this goal's account." : "Attach a confirmed transfer out of this goal's account.");
+    }
+    if (!money(t.amount).eq(dto.amount)) throw new DomainError('bank_movement_amount_mismatch', `The transfer was ₹${fmt(t.amount)}, not ₹${fmt(dto.amount)}.`);
+    const used = await trx.selectFrom('goal_contributions').select('id').where('transaction_id', '=', t.id).executeTakeFirst();
+    if (used) throw new DomainError('bank_movement_already_linked', 'This transfer is already linked to a goal contribution.', HttpStatus.CONFLICT);
   }
 
   /** Archiving releases the goal's savings back into available-to-spend. */
@@ -198,6 +262,17 @@ export class GoalsService {
 
   private async present(db: Executor, g: GoalRow, asOf = today()) {
     const saved = await this.saved(db, g.id);
+    // Three separate figures: progress (saved), virtual allocation, and money actually moved by linked transfers.
+    const accountLiquid = g.account_id
+      ? (await db.selectFrom('bank_accounts').select('is_liquid').where('id', '=', g.account_id).executeTakeFirst())?.is_liquid ?? false
+      : true;
+    const allocated = g.allocation_mode === 'reserve' && g.status !== 'archived' && accountLiquid ? saved : new Decimal(0);
+    const moved = await db
+      .selectFrom('goal_contributions')
+      .select(sql<string>`COALESCE(SUM(amount), 0)`.as('total'))
+      .where('goal_id', '=', g.id)
+      .where('transaction_id', 'is not', null)
+      .executeTakeFirstOrThrow();
     const recent = await db
       .selectFrom('goal_contributions')
       .select(sql<string>`COALESCE(SUM(amount), 0)`.as('total'))
@@ -223,9 +298,14 @@ export class GoalsService {
       monthlyContribution: g.monthly_contribution,
       priority: g.priority,
       accountId: g.account_id,
+      allocationMode: g.allocation_mode,
       status: g.status,
       completedAt: g.completed_at,
       saved: fmt(saved),
+      /** Amount this goal currently subtracts from available-to-spend. */
+      allocated: fmt(allocated),
+      /** Portion of `saved` backed by linked transfers (actual bank movement). */
+      movedByTransfers: fmt(moved.total),
       remaining: fmt(p.remaining),
       progressPercent: p.progressPercent.toFixed(2),
       recommendedMonthly: p.recommendedMonthly ? fmt(p.recommendedMonthly) : null,
