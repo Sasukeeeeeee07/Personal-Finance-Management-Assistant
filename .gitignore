@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.pgdata/
+coverage/
+*.log
+.next/
+# Flutter
+mobile/build/
+mobile/.dart_tool/
+mobile/android/app/google-services.json
+mobile/ios/Runner/GoogleService-Info.plist
+# Firebase service accounts
+*firebase-adminsdk*.json
+service-account*.json
