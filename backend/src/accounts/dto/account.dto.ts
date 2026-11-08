@@ -34,9 +34,16 @@ export class CreateAccountDto {
   @IsOptional() @Matches(MONEY_PATTERN, { message: MONEY_MSG })
   openingBalance?: string;
 
-  @ApiPropertyOptional({ example: '2026-11-01' })
+  @ApiPropertyOptional({ description: 'When the account was opened at the bank (informational).', example: '2019-04-01' })
   @IsOptional() @IsDateString({ strict: true })
   openingDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'The date your opening balance applies from. Transactions before this date can only be added as historical statement imports. Defaults to today.',
+    example: '2026-11-01',
+  })
+  @IsOptional() @IsDateString({ strict: true })
+  trackingStartDate?: string;
 
   @ApiPropertyOptional({ description: 'Override whether this counts as spendable money (defaults by type).' })
   @IsOptional() @IsBoolean()

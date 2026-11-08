@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { validateIdempotencyKey } from '../common/idempotency.service';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
 import { CreateTransactionDto, ListTransactionsQuery, UpdateTransactionDto } from './dto/transaction.dto';
@@ -29,8 +30,9 @@ export class TransactionsController {
 
   @Post() @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)
   @ApiOperation({ summary: 'Record income, an expense, or a transfer between your own accounts' })
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateTransactionDto) {
-    return this.transactions.create(user, dto);
+  @ApiHeader({ name: 'Idempotency-Key', required: false, description: 'Client-generated key (8–128 chars). Replaying the same request with the same key returns the original result instead of creating a second transaction.' })
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreateTransactionDto, @Headers('idempotency-key') key?: string) {
+    return this.transactions.create(user, dto, validateIdempotencyKey(key));
   }
 
   @Patch(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)

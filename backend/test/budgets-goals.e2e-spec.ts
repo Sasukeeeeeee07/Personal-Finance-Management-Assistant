@@ -11,9 +11,10 @@ describe('Budgets', () => {
 
   async function setup() {
     const u = await registerUser(t);
-    const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '30000' }).expect(201)).body;
-    const card = (await u.post('/accounts', { name: 'Card', type: 'credit_card' }).expect(201)).body;
-    const wallet = (await u.post('/accounts', { name: 'Wallet', type: 'wallet' }).expect(201)).body;
+    const since = { trackingStartDate: '2026-01-01' };
+    const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '30000', ...since }).expect(201)).body;
+    const card = (await u.post('/accounts', { name: 'Card', type: 'credit_card', ...since }).expect(201)).body;
+    const wallet = (await u.post('/accounts', { name: 'Wallet', type: 'wallet', ...since }).expect(201)).body;
     return { u, bank, card, wallet, food: await category(u, 'Food') };
   }
   const spend = (u: TestUser, accountId: string, amount: string, occurredAt: string, categoryId?: string, extra: object = {}) =>
@@ -29,7 +30,7 @@ describe('Budgets', () => {
     expect(first.budgetAlerts[0].message).toContain('₹1500.00 left');
 
     const b = (await u.get(`/budgets/${budget.id}`).expect(200)).body;
-    expect(b.current).toMatchObject({ spent: '2500.00', remaining: '1500.00', utilizationPercent: '62.50', thresholdsReached: [50], health: 'on_track' });
+    expect(b.current).toMatchObject({ spent: '2500.00', remaining: '1500.00', utilizationPercent: '62.50', thresholdsReached: [50], health: 'warning', healthWarningFromPercent: 50 });
 
     const second = (await spend(u, bank.id, '10', now(), food)).body;
     expect(second.budgetAlerts).toEqual([]); // 50% does not fire again in the same period
@@ -165,7 +166,7 @@ describe('Financial goals', () => {
 
   it('contributions are allocations: they reduce available-to-spend, never income or expenses', async () => {
     const { u, bank } = await setup();
-    const res = (await u.post('/goals', { name: 'Emergency fund', kind: 'emergency_fund', targetAmount: '100000', monthlyContribution: '5000', initialAmount: '10000' }).expect(201)).body;
+    const res = (await u.post('/goals', { name: 'Emergency fund', kind: 'emergency_fund', targetAmount: '100000', monthlyContribution: '5000', initialAmount: '10000', allocationMode: 'reserve' }).expect(201)).body;
     expect(res.goal).toMatchObject({ saved: '10000.00', remaining: '90000.00', progressPercent: '10.00', status: 'active', estimateBasis: 'planned_monthly_contribution' });
     expect(res.position).toMatchObject({ liquidBalance: '30000.00', allocated: '10000.00', availableToSpend: '20000.00' });
 
@@ -180,7 +181,7 @@ describe('Financial goals', () => {
 
   it('withdrawals are limited to what was saved and goals complete automatically', async () => {
     const { u } = await setup();
-    const { goal } = (await u.post('/goals', { name: 'Laptop', kind: 'gadget', targetAmount: '60000' }).expect(201)).body;
+    const { goal } = (await u.post('/goals', { name: 'Laptop', kind: 'gadget', targetAmount: '60000', allocationMode: 'reserve' }).expect(201)).body;
     const over = await u.post(`/goals/${goal.id}/contributions`, { type: 'withdrawal', amount: '1' }).expect(422);
     expect(over.body.code).toBe('withdrawal_exceeds_saved');
     let r = (await u.post(`/goals/${goal.id}/contributions`, { type: 'contribution', amount: '60000' }).expect(201)).body;
@@ -196,9 +197,9 @@ describe('Financial goals', () => {
   it('archiving releases savings; goals in a fixed deposit do not reduce available-to-spend', async () => {
     const { u } = await setup();
     const fd = (await u.post('/accounts', { name: 'FD', type: 'fixed_deposit', openingBalance: '50000' }).expect(201)).body;
-    const inFd = (await u.post('/goals', { name: 'Car', kind: 'vehicle', targetAmount: '300000', accountId: fd.id, initialAmount: '50000' }).expect(201)).body;
+    const inFd = (await u.post('/goals', { name: 'Car', kind: 'vehicle', targetAmount: '300000', accountId: fd.id, initialAmount: '50000', allocationMode: 'reserve' }).expect(201)).body;
     expect(inFd.position).toMatchObject({ allocated: '0.00', availableToSpend: '30000.00' });
-    const trip = (await u.post('/goals', { name: 'Trip', kind: 'vacation', targetAmount: '20000', initialAmount: '8000' }).expect(201)).body;
+    const trip = (await u.post('/goals', { name: 'Trip', kind: 'vacation', targetAmount: '20000', initialAmount: '8000', allocationMode: 'reserve' }).expect(201)).body;
     expect(trip.position.availableToSpend).toBe('22000.00');
     const archived = (await u.post(`/goals/${trip.goal.id}/archive`).expect(200)).body;
     expect(archived.position.availableToSpend).toBe('30000.00');
@@ -243,7 +244,7 @@ describe('Month-end forecast', () => {
 
   it('combines balances, scheduled payments, recurring items and variable spending, with assumptions', async () => {
     const u = await registerUser(t);
-    const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '30000' }).expect(201)).body;
+    const bank = (await u.post('/accounts', { name: 'Bank', type: 'savings', openingBalance: '30000', trackingStartDate: '2026-01-01' }).expect(201)).body;
     await u.post('/transactions', { type: 'income', amount: '50000', accountId: bank.id, sourceName: 'Acme', categoryId: await category(u, 'Salary'), isRecurring: true, occurredAt: ist('2026-10-25') }).expect(201);
     await u.post('/transactions', { type: 'expense', amount: '649', accountId: bank.id, merchant: 'Netflix', isRecurring: true, occurredAt: ist('2026-10-12') }).expect(201);
     for (const d of ['2026-11-05', '2026-11-06', '2026-11-07']) {

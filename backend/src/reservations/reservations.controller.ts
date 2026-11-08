@@ -51,6 +51,12 @@ export class ReservationsController {
     return this.reservations.release(user, id);
   }
 
+  @Get('reservations/:id/settlements') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @ApiOperation({ summary: 'Every payment linked to this reservation, including reversed ones' })
+  settlements(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.reservations.settlementHistory(user, id);
+  }
+
   @Post('reservations/:id/settle') @HttpCode(200) @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)
   @ApiOperation({ summary: 'Mark a reservation as paid by an existing transaction' })
   settle(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: SettleReservationDto) {

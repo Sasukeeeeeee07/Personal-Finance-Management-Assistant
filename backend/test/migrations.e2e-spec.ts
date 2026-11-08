@@ -29,18 +29,44 @@ describe('Migrations and constraints', () => {
   it('applies all migrations idempotently and seeds reference data', async () => {
     await migrate(db);
     const names = (await db.selectFrom('_migrations').select('name').orderBy('name').execute()).map((r) => r.name);
-    expect(names).toEqual(['001_foundation', '002_core_finance', '003_reservations', '004_budgets_goals']);
+    expect(names).toEqual(['001_foundation', '002_core_finance', '003_reservations', '004_budgets_goals', '005_reservation_lifecycle', '006_goal_allocation', '007_account_tracking', '008_idempotency']);
     const roles = await db.selectFrom('roles').select('key').execute();
     expect(roles.map((r) => r.key).sort()).toEqual(['org_admin', 'standard_user', 'super_admin']);
     const cats = await db.selectFrom('transaction_categories').select('id').where('owner_id', 'is', null).execute();
     expect(cats).toHaveLength(24);
   });
 
-  it('rolls back the latest migration and re-applies it', async () => {
-    expect(await rollbackLast(db)).toBe('004_budgets_goals');
+  it('rolls back every migration added since the baseline and re-applies them', async () => {
+    for (const name of ['008_idempotency', '007_account_tracking', '006_goal_allocation', '005_reservation_lifecycle', '004_budgets_goals']) {
+      expect(await rollbackLast(db)).toBe(name);
+    }
     await expect(sql`SELECT 1 FROM budgets`.execute(db)).rejects.toThrow();
+    await expect(sql`SELECT tracking_start_date FROM bank_accounts`.execute(db)).rejects.toThrow();
     await migrate(db);
-    await sql`SELECT 1 FROM budgets`.execute(db);
+    await sql`SELECT 1 FROM idempotency_keys`.execute(db);
+    await sql`SELECT occurrence_date FROM money_reservations`.execute(db);
+  });
+
+  it('upgrades data written under the pre-review schema (004 → 008)', async () => {
+    for (let i = 0; i < 4; i++) await rollbackLast(db); // back to 004
+    const org = (await sql<{ id: string }>`INSERT INTO organizations (name) VALUES ('legacy') RETURNING id`.execute(db)).rows[0].id;
+    const user = (await sql<{ id: string }>`INSERT INTO users (email, full_name, default_organization_id) VALUES (${`legacy${Date.now()}@x.com`}, 'l', ${org}) RETURNING id`.execute(db)).rows[0].id;
+    const acct = (await sql<{ id: string }>`INSERT INTO bank_accounts (owner_id, organization_id, name, type, opening_balance, opening_date, is_liquid, is_liability) VALUES (${user}, ${org}, 'a', 'savings', 100, '2026-03-01', true, false) RETURNING id`.execute(db)).rows[0].id;
+    const txn = (await sql<{ id: string }>`INSERT INTO transactions (owner_id, organization_id, type, status, amount, account_id, occurred_at) VALUES (${user}, ${org}, 'expense', 'confirmed', 50, ${acct}, now()) RETURNING id`.execute(db)).rows[0].id;
+    const res = (await sql<{ id: string }>`INSERT INTO money_reservations (owner_id, organization_id, account_id, name, target_amount, reserved_amount, due_date, status, transaction_id, settled_amount, variance, closed_at) VALUES (${user}, ${org}, ${acct}, 'r', 50, 50, '2026-11-01', 'reconciled', ${txn}, 50, 0, now()) RETURNING id`.execute(db)).rows[0].id;
+    const goal = (await sql<{ id: string }>`INSERT INTO financial_goals (owner_id, organization_id, name, target_amount) VALUES (${user}, ${org}, 'g', 1000) RETURNING id`.execute(db)).rows[0].id;
+
+    await migrate(db);
+    const a = await db.selectFrom('bank_accounts').select(['tracking_start_date', 'opening_date']).where('id', '=', acct).executeTakeFirstOrThrow();
+    expect(a).toEqual({ tracking_start_date: '2026-03-01', opening_date: '2026-03-01' });
+    const r = await db.selectFrom('money_reservations').select(['occurrence_date']).where('id', '=', res).executeTakeFirstOrThrow();
+    expect(r.occurrence_date).toBe('2026-11-01');
+    const s = await db.selectFrom('reservation_settlements').selectAll().where('reservation_id', '=', res).execute();
+    expect(s).toEqual([expect.objectContaining({ transaction_id: txn, amount: '50.00', variance: '0.00', status: 'active' })]);
+    const g = await db.selectFrom('financial_goals').select('allocation_mode').where('id', '=', goal).executeTakeFirstOrThrow();
+    expect(g.allocation_mode).toBe('reserve'); // existing goals keep their previous behaviour
+    const t2 = await db.selectFrom('transactions').select('is_historical').where('id', '=', txn).executeTakeFirstOrThrow();
+    expect(t2.is_historical).toBe(false);
   });
 
   it('enforces financial constraints in the database itself', async () => {
@@ -52,7 +78,7 @@ describe('Migrations and constraints', () => {
       .executeTakeFirstOrThrow();
     const acct = await db
       .insertInto('bank_accounts')
-      .values({ owner_id: user.id, organization_id: org.id, name: 'a', type: 'savings', institution_name: null, account_mask: null, opening_balance: '0', is_liquid: true, is_liability: false, credit_limit: null, archived_at: null, deleted_at: null })
+      .values({ owner_id: user.id, organization_id: org.id, name: 'a', type: 'savings', institution_name: null, account_mask: null, opening_balance: '0', opening_date: null, tracking_start_date: '2026-01-01', is_liquid: true, is_liability: false, credit_limit: null, archived_at: null, deleted_at: null })
       .returning('id')
       .executeTakeFirstOrThrow();
     const txn = (over: object) =>
@@ -71,7 +97,7 @@ describe('Migrations and constraints', () => {
     await expect(txn({ external_reference: 'R1' })).rejects.toThrow(); // same bank reference counted once
     await txn({ external_reference: 'R1', status: 'duplicate' }); // a stored duplicate is allowed
     await expect(
-      db.insertInto('money_reservations').values({ owner_id: user.id, organization_id: org.id, commitment_id: null, account_id: acct.id, name: 'r', target_amount: '100', reserved_amount: '150', due_date: '2026-12-01', transaction_id: null, settled_amount: null, variance: null, closed_at: null }).execute(),
+      db.insertInto('money_reservations').values({ owner_id: user.id, organization_id: org.id, commitment_id: null, account_id: acct.id, name: 'r', target_amount: '100', reserved_amount: '150', due_date: '2026-12-01', occurrence_date: '2026-12-01', created_from_reservation_id: null, close_reason: null, transaction_id: null, settled_amount: null, variance: null, closed_at: null }).execute(),
     ).rejects.toThrow(); // cannot reserve more than the target
     await expect(sql`INSERT INTO ledger_entries (owner_id, transaction_id, account_id, amount) SELECT ${user.id}, id, ${acct.id}, 0 FROM transactions LIMIT 1`.execute(db)).rejects.toThrow();
     // Exact decimals: 0.1 + 0.2 = 0.3 in NUMERIC.

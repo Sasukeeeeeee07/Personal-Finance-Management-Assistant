@@ -5,7 +5,7 @@ import type { Executor, TransactionsTable } from '../database/schema';
 import { money } from '../common/money';
 import type { Selectable } from 'kysely';
 
-type Txn = Pick<Selectable<TransactionsTable>, 'id' | 'owner_id' | 'type' | 'status' | 'amount' | 'account_id' | 'destination_account_id' | 'deleted_at'>;
+type Txn = Pick<Selectable<TransactionsTable>, 'id' | 'owner_id' | 'type' | 'status' | 'amount' | 'account_id' | 'destination_account_id' | 'deleted_at'> & { is_historical?: boolean };
 
 /**
  * The append-only ledger. A transaction contributes entries only while it is confirmed and not deleted.
@@ -17,7 +17,8 @@ type Txn = Pick<Selectable<TransactionsTable>, 'id' | 'owner_id' | 'type' | 'sta
 @Injectable()
 export class LedgerService {
   static entriesFor(t: Txn): { account_id: string; amount: Decimal }[] {
-    if (t.status !== 'confirmed' || t.deleted_at) return [];
+    // Historical imports predate the opening balance, which already includes them.
+    if (t.status !== 'confirmed' || t.deleted_at || t.is_historical) return [];
     const amt = money(t.amount);
     switch (t.type) {
       case 'income':

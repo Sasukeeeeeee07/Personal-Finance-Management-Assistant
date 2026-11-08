@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, ParseBoolPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Headers, HttpCode, Param, ParseBoolPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { validateIdempotencyKey } from '../common/idempotency.service';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
 import { ContributionDto, CreateGoalDto, UpdateGoalDto } from './goal.dto';
@@ -34,8 +35,15 @@ export class GoalsController {
 
   @Post(':id/contributions') @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)
   @ApiOperation({ summary: 'Set money aside for a goal, or take some out. Not income or expense.' })
-  contribute(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ContributionDto) {
-    return this.goals.contribute(user, id, dto);
+  @ApiHeader({ name: 'Idempotency-Key', required: false, description: 'Client-generated key; replays return the original result.' })
+  contribute(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Body() dto: ContributionDto, @Headers('idempotency-key') key?: string) {
+    return this.goals.contribute(user, id, dto, validateIdempotencyKey(key));
+  }
+
+  @Post(':id/contributions/:contributionId/reverse') @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)
+  @ApiOperation({ summary: 'Reverse a contribution or withdrawal by recording its opposite' })
+  reverse(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string, @Param('contributionId', ParseUUIDPipe) contributionId: string) {
+    return this.goals.reverseContribution(user, id, contributionId);
   }
 
   @Post(':id/complete') @HttpCode(200) @RequirePermissions(PERMISSIONS.FINANCE_OWN_WRITE)

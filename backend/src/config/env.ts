@@ -9,6 +9,16 @@ export interface AppConfig {
   googleClientIds: string[];
   appWebUrl: string;
   corsOrigins: string[];
+  /** Forecast weights for days 1–7, 8–30 and 31–90 before as-of (D-016). */
+  forecastWeights: [number, number, number];
+}
+
+function parseWeights(raw: string | undefined): [number, number, number] {
+  const w = (raw ?? '0.5,0.3,0.2').split(',').map(Number);
+  if (w.length !== 3 || w.some((x) => !Number.isFinite(x) || x < 0) || w.every((x) => x === 0)) {
+    throw new Error('FORECAST_VARIABLE_WEIGHTS must be three non-negative numbers, e.g. 0.5,0.3,0.2');
+  }
+  return [w[0], w[1], w[2]];
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -31,6 +41,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     googleClientIds: (env.GOOGLE_CLIENT_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
     appWebUrl: env.APP_WEB_URL ?? 'http://localhost:3000',
     corsOrigins: (env.CORS_ORIGINS ?? 'http://localhost:3000').split(',').map((s) => s.trim()).filter(Boolean),
+    forecastWeights: parseWeights(env.FORECAST_VARIABLE_WEIGHTS),
   };
 }
 

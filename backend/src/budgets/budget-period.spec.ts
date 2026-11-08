@@ -51,7 +51,15 @@ describe('budget figures', () => {
     expect(f.thresholdsReached).toEqual([50]);
     expect(f.daysLeft).toBe(10);
     expect(f.dailyTarget.toFixed(2)).toBe('150.00');
-    expect(f.status).toBe('on_track');
+    expect(f.status).toBe('warning'); // 62.5% is past the lowest threshold (50%)
+    expect(f.warningFrom).toBe(50);
+  });
+
+  it('warning starts at the lowest configured threshold', () => {
+    const custom = { ...base, thresholds: [80, 95] };
+    expect(computeFigures({ ...custom, spent: new Decimal(3100) }).status).toBe('on_track'); // 77.5%
+    expect(computeFigures({ ...custom, spent: new Decimal(3200) }).status).toBe('warning'); // 80%
+    expect(computeFigures({ ...base, thresholds: [], spent: new Decimal(3999) }).status).toBe('on_track');
   });
 
   it('reports exceeded with no daily allowance left', () => {

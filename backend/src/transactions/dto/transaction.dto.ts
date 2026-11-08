@@ -6,6 +6,8 @@ import type { TransactionSource, TransactionStatus, TransactionType } from '../.
 
 export const TRANSACTION_TYPES: TransactionType[] = ['income', 'expense', 'transfer'];
 export const TRANSACTION_SOURCES: TransactionSource[] = ['manual', 'sms', 'notification', 'statement_import', 'account_aggregator'];
+export const TRANSACTION_SORTS = ['occurredAt:desc', 'occurredAt:asc', 'amount:desc', 'amount:asc'] as const;
+export type TransactionSort = (typeof TRANSACTION_SORTS)[number];
 export const SETTABLE_STATUSES: TransactionStatus[] = ['confirmed', 'needs_review', 'ignored', 'failed'];
 const POSITIVE_MONEY = /^(?!0+(\.0{1,2})?$)\d{1,17}(\.\d{1,2})?$/;
 const MONEY_MSG = 'Enter an amount greater than 0, like 450 or 450.50.';
@@ -57,6 +59,13 @@ export class CreateTransactionDto {
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isEssential?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isRecurring?: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Explicit historical import: a statement line dated before the account tracking start date. Counted in analytics, never in the balance (the opening balance already includes it). Only for statement_import / account_aggregator sources.',
+  })
+  @IsOptional() @IsBoolean()
+  historical?: boolean;
+
   @ApiPropertyOptional({ description: 'Pay a reserved commitment with this expense. The reservation is released in the same step, so money is not deducted twice.' })
   @IsOptional() @IsUUID('4')
   reservationId?: string;
@@ -98,4 +107,5 @@ export class ListTransactionsQuery {
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(100) search?: string;
   @ApiPropertyOptional({ default: 1 }) @IsOptional() @Type(() => Number) @IsInt() @Min(1) page?: number;
   @ApiPropertyOptional({ default: 50 }) @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(200) pageSize?: number;
+  @ApiPropertyOptional({ enum: TRANSACTION_SORTS, default: 'occurredAt:desc' }) @IsOptional() @IsIn(TRANSACTION_SORTS) sort?: TransactionSort;
 }

@@ -10,6 +10,7 @@ import { AuditService } from '../audit/audit.service';
 import { CategoriesService } from '../categories/categories';
 import { ReservationsService } from '../reservations/reservations.service';
 import { BudgetsService } from '../budgets/budgets.service';
+import { IdempotencyService } from '../common/idempotency.service';
 import { today } from '../common/dates';
 import { LedgerService } from './ledger.service';
 import { CreateTransactionDto, ListTransactionsQuery, UpdateTransactionDto } from './dto/transaction.dto';
@@ -39,6 +40,7 @@ export function presentTransaction(t: TxnRow) {
     isEssential: t.is_essential,
     isRecurring: t.is_recurring,
     duplicateOfId: t.duplicate_of_id,
+    isHistorical: t.is_historical,
     version: t.version,
     createdAt: t.created_at,
     updatedAt: t.updated_at,
@@ -55,22 +57,23 @@ export class TransactionsService {
     private readonly reservations: ReservationsService,
     private readonly audit: AuditService,
     private readonly budgets: BudgetsService,
+    private readonly idempotency: IdempotencyService,
   ) {}
 
   /** Records the transaction, then reports any budget thresholds it pushed past. */
-  async create(user: AuthUser, dto: CreateTransactionDto) {
-    const result = await this.createOnce(user, dto);
-    return { ...result, budgetAlerts: await this.budgets.evaluateAlertsSafely(user.userId) };
+  async create(user: AuthUser, dto: CreateTransactionDto, idempotencyKey?: string) {
+    const { replayed, body } = await this.createOnce(user, dto, idempotencyKey);
+    // A replay returns the original result; its alerts were already raised the first time.
+    return { ...body, budgetAlerts: replayed ? [] : await this.budgets.evaluateAlertsSafely(user.userId), idempotentReplay: replayed };
   }
 
-  private async createOnce(user: AuthUser, dto: CreateTransactionDto) {
+  private async createOnce(user: AuthUser, dto: CreateTransactionDto, key?: string) {
+    const attempt = () => this.db.transaction().execute((trx) => this.idempotency.run(trx, user.userId, key, 'POST /transactions', dto, () => this.createIn(trx, user, dto)));
     try {
-      return await this.db.transaction().execute((trx) => this.createIn(trx, user, dto));
+      return await attempt();
     } catch (e: any) {
       // Two copies of the same bank reference raced each other; the loser is stored as a duplicate.
-      if (e?.code === '23505' && String(e?.constraint ?? e?.message).includes('transactions_external_ref_unique')) {
-        return this.db.transaction().execute((trx) => this.createIn(trx, user, dto));
-      }
+      if (e?.code === '23505' && String(e?.constraint ?? e?.message).includes('transactions_external_ref_unique')) return attempt();
       throw e;
     }
   }
@@ -96,9 +99,11 @@ export class TransactionsService {
       is_planned: dto.isPlanned ?? (dto.reservationId ? true : null),
       is_essential: dto.isEssential ?? null,
       is_recurring: dto.isRecurring ?? false,
+      is_historical: dto.historical ?? false,
       duplicate_of_id: null,
       deleted_at: null,
     };
+    if (dto.historical && dto.reservationId) throw new DomainError('historical_settlement', 'A historical import cannot pay a current reservation.');
     if (dto.type === 'transfer' && dto.categoryId) throw new DomainError('transfer_category', 'Transfers between your own accounts do not have a category.');
     const currency = await this.validate(trx, user, draft);
     draft.currency = currency;
@@ -165,7 +170,7 @@ export class TransactionsService {
       await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'transaction', entityId: id, action: 'updated', before, after });
 
       if (after.status !== 'confirmed' || (after.type !== 'expense' && after.type !== 'transfer')) {
-        await this.reservations.reopenForTransaction(trx, user, id);
+        await this.reservations.reverseSettlementFor(trx, user, id, after.status !== 'confirmed' ? `payment_status_${after.status}` : 'payment_type_changed');
       } else if (after.amount !== before.amount) {
         await this.reservations.syncSettledAmount(trx, id, after.amount);
       }
@@ -180,7 +185,7 @@ export class TransactionsService {
       const before = await this.findOwned(trx, user.userId, id, true);
       const after = await trx.updateTable('transactions').set({ deleted_at: new Date(), updated_at: new Date(), version: before.version + 1 }).where('id', '=', id).returningAll().executeTakeFirstOrThrow();
       await this.ledger.post(trx, before, after);
-      await this.reservations.reopenForTransaction(trx, user, id);
+      await this.reservations.reverseSettlementFor(trx, user, id, 'payment_deleted');
       await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'transaction', entityId: id, action: 'deleted', before });
     });
   }
@@ -205,8 +210,17 @@ export class TransactionsService {
       query = query.where((eb) => eb.or([eb('merchant', 'ilike', term), eb('description', 'ilike', term), eb('source_name', 'ilike', term)]));
     }
     const [{ total }] = await query.select(sql<string>`COUNT(*)`.as('total')).execute();
-    const rows = await query.selectAll().orderBy('occurred_at', 'desc').orderBy('created_at', 'desc').limit(pageSize).offset((page - 1) * pageSize).execute();
-    return { items: rows.map(presentTransaction), page, pageSize, total: Number(total) };
+    const [field, dir] = (q.sort ?? 'occurredAt:desc').split(':') as ['occurredAt' | 'amount', 'asc' | 'desc'];
+    // id is the final tie-breaker so pages never overlap or skip rows.
+    const rows = await query
+      .selectAll()
+      .orderBy(field === 'amount' ? 'amount' : 'occurred_at', dir)
+      .orderBy('created_at', dir)
+      .orderBy('id', dir)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize)
+      .execute();
+    return { items: rows.map(presentTransaction), page, pageSize, total: Number(total), sort: `${field}:${dir}` };
   }
 
   async history(user: AuthUser, id: string) {
@@ -228,14 +242,43 @@ export class TransactionsService {
   private async validate(trx: Executor, user: AuthUser, t: Insertable<TransactionsTable>): Promise<string> {
     const account = await this.accounts.findOwned(trx, user.userId, t.account_id);
     if (account.archived_at) throw new DomainError('account_archived', `${account.name} is archived. Unarchive it to add transactions.`);
+    const involved = [account];
     if (t.type === 'transfer') {
       if (t.destination_account_id === t.account_id) throw new DomainError('same_account_transfer', 'Choose two different accounts for a transfer.');
       const dest = await this.accounts.findOwned(trx, user.userId, t.destination_account_id!);
       if (dest.archived_at) throw new DomainError('account_archived', `${dest.name} is archived. Unarchive it to add transactions.`);
       if (dest.currency !== account.currency) throw new DomainError('currency_mismatch', 'Transfers between accounts in different currencies are not supported yet.');
+      involved.push(dest);
     }
+    this.assertTrackingWindow(t, involved);
     if (t.category_id && t.type !== 'transfer') await this.categories.assertUsable(trx, user.userId, t.category_id, t.type);
     return account.currency;
+  }
+
+  /**
+   * An account's opening balance applies from its tracking start date (India time).
+   * Live transactions must fall on or after it; explicit historical imports must fall before it
+   * and never reach the ledger, so the opening balance is not double-counted.
+   */
+  private assertTrackingWindow(t: Insertable<TransactionsTable>, accounts: { name: string; tracking_start_date: string }[]) {
+    const day = today('Asia/Kolkata', new Date(t.occurred_at as string | Date));
+    const early = accounts.filter((a) => day < a.tracking_start_date);
+    if (t.is_historical) {
+      if (t.source !== 'statement_import' && t.source !== 'account_aggregator') {
+        throw new DomainError('historical_source', 'Only statement imports can add historical transactions.');
+      }
+      if (early.length !== accounts.length) {
+        throw new DomainError('not_historical', 'This transaction is on or after the date you started tracking the account. Add it as a normal transaction.');
+      }
+      return;
+    }
+    if (early.length) {
+      const a = early[0];
+      throw new DomainError(
+        'before_tracking_start',
+        `This date is before you started tracking ${a.name} (${a.tracking_start_date}). Your opening balance already includes it. Import older statements as historical transactions instead.`,
+      );
+    }
   }
 
   /**

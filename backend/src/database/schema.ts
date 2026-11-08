@@ -109,7 +109,8 @@ export interface BankAccountsTable {
   account_mask: string | null;
   currency: Generated<string>;
   opening_balance: Money;
-  opening_date: ColumnType<string, string | undefined, string>;
+  opening_date: string | null;
+  tracking_start_date: DateOnly;
   is_liquid: boolean;
   is_liability: boolean;
   credit_limit: MoneyNullable;
@@ -157,6 +158,7 @@ export interface TransactionsTable {
   is_essential: boolean | null;
   is_recurring: Generated<boolean>;
   duplicate_of_id: string | null;
+  is_historical: Generated<boolean>;
   version: Generated<number>;
   created_at: GeneratedTimestamp;
   updated_at: GeneratedTimestamp;
@@ -205,6 +207,9 @@ export interface MoneyReservationsTable {
   target_amount: Money;
   reserved_amount: Money;
   due_date: DateOnly;
+  occurrence_date: DateOnly;
+  created_from_reservation_id: string | null;
+  close_reason: string | null;
   status: Generated<ReservationStatus>;
   transaction_id: string | null;
   settled_amount: MoneyNullable;
@@ -248,6 +253,8 @@ export interface BudgetAlertsTable {
   created_at: GeneratedTimestamp;
 }
 
+export type GoalAllocationMode = 'track_only' | 'reserve';
+
 export type GoalKind = 'emergency_fund' | 'gadget' | 'vacation' | 'education' | 'vehicle' | 'savings' | 'custom';
 
 export interface FinancialGoalsTable {
@@ -262,6 +269,7 @@ export interface FinancialGoalsTable {
   monthly_contribution: MoneyNullable;
   priority: Generated<number>;
   account_id: string | null;
+  allocation_mode: Generated<GoalAllocationMode>;
   status: Generated<'active' | 'completed' | 'archived'>;
   completed_at: TimestampNullable;
   created_at: GeneratedTimestamp;
@@ -276,11 +284,37 @@ export interface GoalContributionsTable {
   contributed_on: DateOnly;
   note: string | null;
   is_opening: Generated<boolean>;
+  reverses_contribution_id: string | null;
   transaction_id: string | null;
   created_at: GeneratedTimestamp;
 }
 
+export interface ReservationSettlementsTable {
+  id: Generated<string>;
+  owner_id: string;
+  reservation_id: string;
+  transaction_id: string;
+  amount: Money;
+  variance: Money;
+  status: Generated<'active' | 'reversed'>;
+  reversal_reason: string | null;
+  created_at: GeneratedTimestamp;
+  reversed_at: TimestampNullable;
+}
+
+export interface IdempotencyKeysTable {
+  owner_id: string;
+  key: string;
+  scope: string;
+  request_hash: string;
+  response_status: number;
+  response_body: unknown;
+  created_at: GeneratedTimestamp;
+}
+
 export interface Database {
+  reservation_settlements: ReservationSettlementsTable;
+  idempotency_keys: IdempotencyKeysTable;
   budgets: BudgetsTable;
   budget_alerts: BudgetAlertsTable;
   financial_goals: FinancialGoalsTable;

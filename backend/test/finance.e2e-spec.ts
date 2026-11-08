@@ -196,7 +196,8 @@ describe('Core financial rules', () => {
   });
 
   it('expense intelligence compares the category with last month', async () => {
-    const { u, bank } = await setup();
+    const { u } = await setup();
+    const bank = (await u.post('/accounts', { name: 'Old account', type: 'savings', openingBalance: '30000', trackingStartDate: '2026-01-01' }).expect(201)).body;
     const food = await category(u, 'Food');
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);

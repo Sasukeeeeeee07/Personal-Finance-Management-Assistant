@@ -5,6 +5,7 @@ import { AuthUser } from '../common/auth-context';
 import { DomainError, notFound } from '../common/errors';
 import { fmt, money } from '../common/money';
 import { DATABASE } from '../database/database.module';
+import { today } from '../common/dates';
 import type { AccountType, BankAccountsTable, DB, Executor } from '../database/schema';
 import { AuditService } from '../audit/audit.service';
 import { LedgerService } from '../transactions/ledger.service';
@@ -26,6 +27,7 @@ export function presentAccount(a: AccountRow, balance: Decimal) {
     isLiability: a.is_liability,
     creditLimit: a.credit_limit,
     openingDate: a.opening_date,
+    trackingStartDate: a.tracking_start_date,
     archived: !!a.archived_at,
     /** Signed ledger balance. Negative on a credit card means money owed. */
     balance: fmt(balance),
@@ -74,7 +76,8 @@ export class AccountsService {
           currency: dto.currency ?? 'INR',
           // Liabilities are stored as negative balances: owing ₹5,000 is −5000.
           opening_balance: fmt(isLiability ? opening.neg() : opening),
-          opening_date: dto.openingDate,
+          opening_date: dto.openingDate ?? null,
+          tracking_start_date: dto.trackingStartDate ?? today(),
           is_liquid: dto.isLiquid ?? LIQUID_BY_DEFAULT.includes(dto.type),
           is_liability: isLiability,
           credit_limit: dto.creditLimit ?? null,

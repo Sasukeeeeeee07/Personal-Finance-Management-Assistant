@@ -34,6 +34,9 @@ export function presentReservation(r: ReservationRow, asOf = today()) {
     settledAmount: r.settled_amount,
     variance: r.variance,
     closedAt: r.closed_at,
+    closeReason: r.close_reason,
+    occurrenceDate: r.occurrence_date,
+    createdFromReservationId: r.created_from_reservation_id,
   };
 }
 
@@ -104,7 +107,7 @@ export class ReservationsService {
       await trx.updateTable('financial_commitments').set({ status: 'cancelled', updated_at: new Date() }).where('id', '=', id).execute();
       await trx
         .updateTable('money_reservations')
-        .set({ status: 'cancelled', closed_at: new Date(), updated_at: new Date() })
+        .set({ status: 'cancelled', close_reason: 'commitment_cancelled', closed_at: new Date(), updated_at: new Date() })
         .where('commitment_id', '=', id)
         .where('status', '=', 'active')
         .execute();
@@ -147,15 +150,21 @@ export class ReservationsService {
   async release(user: AuthUser, id: string) {
     return this.db.transaction().execute(async (trx) => {
       const r = await this.findActive(trx, user.userId, id);
-      const after = await trx.updateTable('money_reservations').set({ status: 'released', closed_at: new Date(), updated_at: new Date() }).where('id', '=', id).returningAll().executeTakeFirstOrThrow();
+      const after = await trx
+        .updateTable('money_reservations')
+        .set({ status: 'released', close_reason: 'released_by_user', closed_at: new Date(), updated_at: new Date() })
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirstOrThrow();
       await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: id, action: 'released', before: r, after });
-      if (r.commitment_id) await this.scheduleNext(trx, user, r.commitment_id, r.due_date);
+      if (r.commitment_id) await this.scheduleSuccessor(trx, user, after);
       return { reservation: presentReservation(after), position: await this.position(trx, user.userId) };
     });
   }
 
   async settleWithExisting(user: AuthUser, id: string, dto: SettleReservationDto) {
     return this.db.transaction().execute(async (trx) => {
+      // Lock order everywhere: transaction → reservation → commitment.
       const txn = await trx.selectFrom('transactions').selectAll().where('id', '=', dto.transactionId).where('owner_id', '=', user.userId).where('deleted_at', 'is', null).forUpdate().executeTakeFirst();
       if (!txn) throw notFound('Transaction');
       const reservation = await this.settle(trx, user, id, txn, dto.acceptDifference ?? false);
@@ -166,14 +175,15 @@ export class ReservationsService {
   /**
    * Reconcile a reservation against the payment that settled it. Must run in the same DB transaction
    * as the payment: the expense lowers the balance while the reservation stops counting as reserved,
-   * so available-to-spend drops exactly once.
+   * so available-to-spend drops exactly once. Records a settlement row (the auditable link) and, for
+   * recurring commitments, reserves the next occurrence as this reservation's successor.
    */
   async settle(trx: Executor, user: AuthUser, reservationId: string, txn: TxnRow, acceptDifference: boolean) {
     const r = await this.findActive(trx, user.userId, reservationId);
     if (txn.status !== 'confirmed' || (txn.type !== 'expense' && txn.type !== 'transfer')) {
       throw new DomainError('invalid_settlement', 'Only a confirmed expense or bill payment can settle a reservation.');
     }
-    const linked = await trx.selectFrom('money_reservations').select('id').where('transaction_id', '=', txn.id).executeTakeFirst();
+    const linked = await trx.selectFrom('reservation_settlements').select('id').where('transaction_id', '=', txn.id).where('status', '=', 'active').executeTakeFirst();
     if (linked) throw new DomainError('transaction_already_settles', 'This transaction already settles another reservation.', HttpStatus.CONFLICT);
 
     const paid = money(txn.amount);
@@ -186,56 +196,114 @@ export class ReservationsService {
         { target: fmt(r.target_amount), reserved: r.reserved_amount, paid: fmt(paid), difference: fmt(variance) },
       );
     }
+    await trx.insertInto('reservation_settlements').values({ owner_id: user.userId, reservation_id: r.id, transaction_id: txn.id, amount: fmt(paid), variance: fmt(variance), reversal_reason: null, reversed_at: null }).execute();
     const after = await trx
       .updateTable('money_reservations')
-      .set({ status: 'reconciled', transaction_id: txn.id, settled_amount: fmt(paid), variance: fmt(variance), closed_at: new Date(), updated_at: new Date() })
+      .set({ status: 'reconciled', transaction_id: txn.id, settled_amount: fmt(paid), variance: fmt(variance), close_reason: 'paid', closed_at: new Date(), updated_at: new Date() })
       .where('id', '=', r.id)
       .returningAll()
       .executeTakeFirstOrThrow();
     await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: r.id, action: 'reconciled', before: r, after });
-    if (r.commitment_id) await this.scheduleNext(trx, user, r.commitment_id, r.due_date);
+    if (r.commitment_id) await this.scheduleSuccessor(trx, user, after);
     return presentReservation(after);
   }
 
-  /** If the settling payment is deleted or stops being confirmed, the reservation is held again. */
-  async reopenForTransaction(trx: Executor, user: AuthUser, transactionId: string) {
-    const r = await trx.selectFrom('money_reservations').selectAll().where('transaction_id', '=', transactionId).where('owner_id', '=', user.userId).executeTakeFirst();
-    if (!r) return;
-    const after = await trx
+  /**
+   * The payment that settled a reservation was deleted, unconfirmed or changed type. Restores the
+   * exact pre-payment state in the caller's DB transaction:
+   *  1. the settlement link is marked reversed (kept for audit);
+   *  2. the occurrence it paid is held again;
+   *  3. the successor occurrence this payment spawned is cancelled if it is still open, and the
+   *     commitment points back at the reopened occurrence — so one obligation is never reserved twice.
+   * A successor that was itself already paid is left alone: it is a separate, settled occurrence.
+   */
+  async reverseSettlementFor(trx: Executor, user: AuthUser, transactionId: string, reason: string) {
+    const s = await trx.selectFrom('reservation_settlements').selectAll().where('transaction_id', '=', transactionId).where('owner_id', '=', user.userId).where('status', '=', 'active').forUpdate().executeTakeFirst();
+    if (!s) return;
+    await trx.updateTable('reservation_settlements').set({ status: 'reversed', reversal_reason: reason, reversed_at: new Date() }).where('id', '=', s.id).execute();
+
+    const before = await trx.selectFrom('money_reservations').selectAll().where('id', '=', s.reservation_id).forUpdate().executeTakeFirstOrThrow();
+    const reopened = await trx
       .updateTable('money_reservations')
-      .set({ status: 'active', transaction_id: null, settled_amount: null, variance: null, closed_at: null, updated_at: new Date() })
-      .where('id', '=', r.id)
+      .set({ status: 'active', transaction_id: null, settled_amount: null, variance: null, close_reason: null, closed_at: null, updated_at: new Date() })
+      .where('id', '=', before.id)
       .returningAll()
       .executeTakeFirstOrThrow();
-    await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: r.id, action: 'reopened', before: r, after });
+    await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: before.id, action: 'reopened', before, after: { ...reopened, reason } });
+
+    if (!before.commitment_id) return;
+    const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', before.commitment_id).forUpdate().executeTakeFirstOrThrow();
+    const successor = await trx
+      .selectFrom('money_reservations')
+      .selectAll()
+      .where('created_from_reservation_id', '=', before.id)
+      .where('status', '!=', 'cancelled')
+      .forUpdate()
+      .executeTakeFirst();
+    if (successor && successor.status === 'active') {
+      const cancelled = await trx
+        .updateTable('money_reservations')
+        .set({ status: 'cancelled', close_reason: 'superseded_by_payment_reversal', closed_at: new Date(), updated_at: new Date() })
+        .where('id', '=', successor.id)
+        .returningAll()
+        .executeTakeFirstOrThrow();
+      await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: successor.id, action: 'cancelled', before: successor, after: cancelled });
+    }
+    // Point the commitment back at the reopened occurrence when nothing later has been paid.
+    if (!successor || successor.status === 'active') {
+      if (c.status !== 'cancelled') {
+        await trx.updateTable('financial_commitments').set({ status: 'active', next_due_date: before.occurrence_date, updated_at: new Date() }).where('id', '=', c.id).execute();
+      }
+    }
   }
 
-  /** Keep settled_amount/variance in sync when the settling payment's amount is corrected. */
+  /** Keep the settlement in sync when the settling payment's amount is corrected. */
   async syncSettledAmount(trx: Executor, transactionId: string, amount: string) {
-    const r = await trx.selectFrom('money_reservations').select(['id', 'target_amount']).where('transaction_id', '=', transactionId).executeTakeFirst();
-    if (!r) return;
-    await trx.updateTable('money_reservations').set({ settled_amount: fmt(amount), variance: fmt(money(amount).minus(r.target_amount)), updated_at: new Date() }).where('id', '=', r.id).execute();
+    const s = await trx.selectFrom('reservation_settlements').select(['id', 'reservation_id']).where('transaction_id', '=', transactionId).where('status', '=', 'active').executeTakeFirst();
+    if (!s) return;
+    const r = await trx.selectFrom('money_reservations').select('target_amount').where('id', '=', s.reservation_id).executeTakeFirstOrThrow();
+    const variance = fmt(money(amount).minus(r.target_amount));
+    await trx.updateTable('reservation_settlements').set({ amount: fmt(amount), variance }).where('id', '=', s.id).execute();
+    await trx.updateTable('money_reservations').set({ settled_amount: fmt(amount), variance, updated_at: new Date() }).where('id', '=', s.reservation_id).execute();
+  }
+
+  async settlementHistory(user: AuthUser, reservationId: string) {
+    const owned = await this.db.selectFrom('money_reservations').select('id').where('id', '=', reservationId).where('owner_id', '=', user.userId).executeTakeFirst();
+    if (!owned) throw notFound('Reservation');
+    const rows = await this.db.selectFrom('reservation_settlements').selectAll().where('reservation_id', '=', reservationId).orderBy('created_at').execute();
+    return rows.map((x) => ({ id: x.id, transactionId: x.transaction_id, amount: x.amount, variance: x.variance, status: x.status, reversalReason: x.reversal_reason, createdAt: x.created_at, reversedAt: x.reversed_at }));
   }
 
   // --- internals -----------------------------------------------------------------------------
 
-  private async scheduleNext(trx: Executor, user: AuthUser, commitmentId: string, settledDueDate: string) {
-    const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', commitmentId).forUpdate().executeTakeFirstOrThrow();
-    if (c.status !== 'active' || c.next_due_date !== settledDueDate) return;
-    const next = nextOccurrence(c.next_due_date, c.frequency, c.interval_count, c.anchor_day);
+  /**
+   * After an occurrence closes (paid or released), reserve the next occurrence that does not exist
+   * yet, linked as this occurrence's successor. Does nothing if the commitment already points past
+   * this occurrence (a later occurrence was scheduled independently, e.g. after a reversal).
+   */
+  private async scheduleSuccessor(trx: Executor, user: AuthUser, closed: ReservationRow) {
+    const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', closed.commitment_id!).forUpdate().executeTakeFirstOrThrow();
+    if (c.status !== 'active' || c.next_due_date > closed.occurrence_date) return;
+    let next = nextOccurrence(closed.occurrence_date, c.frequency, c.interval_count, c.anchor_day);
+    // Skip occurrences that already exist (e.g. paid before an earlier payment was reversed).
+    while (next) {
+      const exists = await trx.selectFrom('money_reservations').select('id').where('commitment_id', '=', c.id).where('occurrence_date', '=', next).where('status', '!=', 'cancelled').executeTakeFirst();
+      if (!exists) break;
+      next = nextOccurrence(next, c.frequency, c.interval_count, c.anchor_day);
+    }
     if (!next) {
       await trx.updateTable('financial_commitments').set({ status: 'completed', updated_at: new Date() }).where('id', '=', c.id).execute();
       return;
     }
     await trx.updateTable('financial_commitments').set({ next_due_date: next, updated_at: new Date() }).where('id', '=', c.id).execute();
     // Allocate first: the next occurrence is reserved in full straight away.
-    await this.insertReservation(trx, user, { commitmentId: c.id, accountId: c.account_id, name: c.name, target: c.amount, reserved: c.amount, dueDate: next });
+    await this.insertReservation(trx, user, { commitmentId: c.id, accountId: c.account_id, name: c.name, target: c.amount, reserved: c.amount, dueDate: next, createdFrom: closed.id });
   }
 
   private async insertReservation(
     trx: Executor,
     user: AuthUser,
-    r: { commitmentId: string | null; accountId: string; name: string; target: string; reserved: string; dueDate: string },
+    r: { commitmentId: string | null; accountId: string; name: string; target: string; reserved: string; dueDate: string; createdFrom?: string },
   ): Promise<ReservationRow> {
     const row = await trx
       .insertInto('money_reservations')
@@ -248,6 +316,9 @@ export class ReservationsService {
         target_amount: r.target,
         reserved_amount: r.reserved,
         due_date: r.dueDate,
+        occurrence_date: r.dueDate,
+        created_from_reservation_id: r.createdFrom ?? null,
+        close_reason: null,
         transaction_id: null,
         settled_amount: null,
         variance: null,
