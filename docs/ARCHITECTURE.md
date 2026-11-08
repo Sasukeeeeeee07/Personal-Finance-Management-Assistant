@@ -64,17 +64,38 @@ Entries are never updated or deleted. An edit posts reversing entries for the ol
 | Allocation | Table | Reduces available-to-spend while |
 |---|---|---|
 | Reservation | `money_reservations` | `status = 'active'` (by `reserved_amount`) |
-| Goal savings | `goal_contributions` | goal not archived and its account is liquid or unset |
+| Goal savings | `goal_contributions` | goal in `reserve` mode (opt-in; default `track_only`), not archived, account liquid or unset |
 
 ```
 available_to_spend = liquid_balance − active_reservations − goal_allocations
 ```
 
+### Reservation lifecycle (D-018)
+
+```
+commitment ──< money_reservations (one live row per occurrence_date)
+                 │  created_from_reservation_id → the occurrence that spawned it
+                 └──< reservation_settlements (payment links: active | reversed)
+```
+Paying an occurrence closes it and reserves the next one as its successor. Reversing the payment reopens it, cancels the still-open successor, and points the commitment back. Locks: transaction → reservation → commitment.
+
+### Tracking start and historical imports (D-019)
+
+An account's opening balance applies from `tracking_start_date`. Live transactions must be on or after it. Statement imports flagged `historical` sit before it and are analytics-only (no ledger entries).
+
 ### Budgets
 
 Budgets are limits, not allocations. They read confirmed, non-deleted `expense` transactions in the period. Transfers (including credit card bill payments) are never expenses, so they never consume a budget.
 
-## 4. Security model
+## 4. Mobile app (`mobile/`)
+
+Flutter, Riverpod (state), GoRouter (auth-guarded routes), Dio (`ApiClient`), flutter_secure_storage (tokens).
+- `ApiClient` is the only HTTP path: attaches tokens, refreshes once per expiry for all concurrent requests (single-flight; refresh tokens are single-use server-side), retries a failed request once, maps every failure to `ApiError` (offline, timeout, validation with field errors, conflict, …).
+- Money stays exact: `Money` wraps `Decimal` parsed from API strings and formats with Indian grouping.
+- Launch: stored tokens are only trusted after `GET /auth/me` succeeds; if the server is unreachable the app shows an offline state rather than unverified data.
+- Sign-out on this device is immediate (server revoke in background); sign-out of all devices waits for the server.
+
+## 5. Security model
 
 - Passwords: Argon2id (m=19 MiB, t=2, p=1).
 - Access token: HS256 JWT, 15 min, carries `sub`, `org`, `sid`. Every request checks that the session is not revoked.
@@ -82,7 +103,7 @@ Budgets are limits, not allocations. They read confirmed, non-deleted `expense` 
 - Errors: a global filter returns generic 500s; SQL and stack traces only go to server logs, without request bodies.
 - Validation: unknown fields are rejected; money must match `^\d{1,17}(\.\d{1,2})?$`.
 
-## 5. Environments
+## 6. Environments
 
 | | Database | Notes |
 |---|---|---|

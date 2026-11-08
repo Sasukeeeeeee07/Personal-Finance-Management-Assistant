@@ -4,6 +4,66 @@ Newest entry first. Each entry is self-contained: a reviewer should not need to 
 
 ---
 
+## HANDOFF-003 · Priority 3 gate fixes + Flutter step 1 (foundation and authentication)
+**Date:** 2026-11-08 · **Branches:** `feature/reservation-lifecycle` (merged to `develop`), `feature/flutter-app` · **Implementer:** Claude
+
+### Objective
+Apply the ChatGPT architecture review (sections A–F) to the backend, validate on real PostgreSQL, then build the Flutter foundation and authentication only.
+
+### 1. Files modified
+**Backend, new:** `src/database/migrations/005_reservation_lifecycle.ts`, `006_goal_allocation.ts`, `007_account_tracking.ts`, `008_idempotency.ts`, `src/common/idempotency.service.ts`, `src/forecast/variable-spending.ts` (+ spec), `scripts/openapi-freeze.js`, `test/review-gate.e2e-spec.ts`, `test/api-contract.e2e-spec.ts`.
+**Backend, changed:** `reservations.service.ts` / controller (lifecycle rewrite), `transactions.service.ts` / controller / DTO (tracking window, historical, sorting, idempotency, reversal hook), `goals.service.ts` / controller / DTO (allocation mode, bank movement, reversals, idempotency), `budget-period.ts`, `budgets.service.ts` (health), `forecast.service.ts` (rewrite), `financial-summary.service.ts` (reserve-mode goals only), `accounts.service.ts` / DTO (tracking start), `app.setup.ts` (uniform errors, OpenAPI builder), `config/env.ts` (forecast weights), `database/{schema.ts, migrator.ts}` (new tables, UTF-8 guard), tests adapted as listed in TEST_REPORT.md.
+**Mobile, new:** the whole `mobile/` app (see `mobile/README.md`), `docs/screenshots/*`.
+**Docs:** `ARCHITECTURE.md`, `DECISIONS.md` (D-015…D-022), `API_CONTRACT.md` (new), `api/openapi-v1.json` (new, frozen), `PROGRESS.md`, `TEST_REPORT.md`, `KNOWN_ISSUES.md`, this file. CI adds a Flutter job.
+
+### 2. Database migrations (all reversible, applied/rolled back/re-applied on PostgreSQL 17.11)
+| Migration | Change | Backfill |
+|---|---|---|
+| 005_reservation_lifecycle | `money_reservations.occurrence_date`, `created_from_reservation_id`, `close_reason`; unique live occurrence per commitment; unique live successor; new `reservation_settlements` | occurrence_date = due_date; settlements from reconciled rows |
+| 006_goal_allocation | `financial_goals.allocation_mode` (`track_only` default); `goal_contributions.reverses_contribution_id`; unique reversal; unique linked transfer | existing goals → `reserve` (keeps prior behaviour) |
+| 007_account_tracking | `bank_accounts.tracking_start_date` (NOT NULL); `opening_date` now nullable/informational; `transactions.is_historical` + source check | tracking_start_date = opening_date |
+| 008_idempotency | `idempotency_keys` (owner, key) | — |
+The upgrade path from pre-review data is covered by a test (`migrations › upgrades data written under the pre-review schema`).
+
+### 3. API changes (contract frozen: `docs/api/openapi-v1.json`, conventions in `docs/API_CONTRACT.md`)
+- New: `GET /reservations/:id/settlements`, `POST /goals/:id/contributions/:contributionId/reverse`.
+- New fields: accounts `trackingStartDate`; transactions `historical` (request) / `isHistorical`; reservations `occurrenceDate`, `closeReason`, `createdFromReservationId`; goals `allocationMode`, `allocated`, `movedByTransfers`; contributions `type: reversal`, `reversed`; budgets `healthWarningFromPercent`; forecast `methodVersion`, `calculatedAt`, `variableSpending.method/windows`; list `sort`; responses `idempotentReplay`.
+- New header: `Idempotency-Key` on `POST /transactions` and `POST /goals/:id/contributions`.
+- Errors: every error body is `{ statusCode, code, message, fields?, details? }` (framework 401/403/404/429 now carry `code` too).
+- Behaviour changes (approved): new goals are track-only; manual transactions before tracking start → 422 `before_tracking_start`; budget warning from the lowest threshold; future forecast `asOf` → 422.
+
+### 4. Tests executed and results
+- Backend: **104/104** on PGlite; **104/104** on PostgreSQL 17.11 (UTF-8), 3 runs. +34 tests since HANDOFF-002, including concurrency (reversal vs successor payment, concurrent deletes, concurrent idempotent requests) and an injected-fault rollback test.
+- Mobile: `flutter analyze` clean; **24/24** widget/unit tests; **2/2** live integration tests against the running backend (incl. refresh-token reuse detection end to end).
+- Manual walkthrough of the web build in a 375×812 viewport against the live backend (screenshots below).
+- GitHub Actions: not run (no remote).
+
+### 5. Outstanding issues
+See `KNOWN_ISSUES.md`. Most relevant: KI-001 (CI never run), KI-016 (response schemas missing from OpenAPI), KI-017 (no emulator/device run yet), KI-004 (RLS deferred).
+
+### 6. Screenshots of completed Flutter screens (`docs/screenshots/`)
+| File | Shows |
+|---|---|
+| `01-sign-in.jpg` | Sign-in, visible labels, verb-first actions |
+| `02-sign-in-validation.jpg` | Validation messages on submit |
+| `03-register.jpg`, `04-register-filled.jpg` | Registration with password rule hint |
+| `05-profile-after-real-registration.jpg` | Profile populated from the live `/auth/me` after a real registration |
+| `06-profile-verification-resent.jpg` | Success banner after `POST /auth/resend-verification` |
+| `07-profile-dark-mode.jpg` | Dark theme |
+| `08-sign-out-all-devices-confirm.jpg` | Confirmation dialog naming the action |
+| `09-offline-session-check.jpg` | Backend unreachable on launch: offline state, session kept, no unverified data shown |
+| `10-forgot-password-offline-error.jpg` | Network failure shown with a recovery hint |
+
+### 7. Decisions requiring further review
+1. **D-019 / KI-019:** tracking start is immutable. Should users be able to move it earlier (re-basing the opening balance), or must older history always come in as historical imports?
+2. **D-016:** recurring-vs-commitment de-duplication is heuristic (category or exact name). Acceptable until ingestion links transactions to commitments explicitly?
+3. **D-018:** when a payment is reversed, the still-open successor is cancelled even if the user had topped it up. Should top-ups carry over to the reopened occurrence instead?
+4. **KI-016:** add OpenAPI response schemas before Flutter step 2 (dashboard) — proposed yes; it adds contract coverage at the cost of DTO classes per endpoint.
+5. **Offline mutations:** plan is a local queue of pending transactions shown as "Pending — not yet confirmed", replayed with their idempotency keys; never included in balances. Confirm before Flutter step 3.
+6. **First signed-in screen:** until the dashboard exists, sign-in lands on Profile (no bottom navigation, to avoid non-functional tabs). OK for this step?
+
+---
+
 ## HANDOFF-002 · Priorities 1 & 2 — Budgets, goals, forecast; real PostgreSQL validation
 **Date:** 2026-11-08 · **Branch:** `feature/budget-management` (merged to `develop`) · **Implementer:** Claude
 

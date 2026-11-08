@@ -41,6 +41,23 @@ jobs:
         run: npm test -- --ci
       - run: npm run build
 
+  mobile:
+    name: Flutter analyze, test and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.35.7', channel: stable, cache: true }
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - run: flutter build apk --debug
+
   backend-pglite:
     name: Backend on PGlite (local dev path)
     runs-on: ubuntu-latest
