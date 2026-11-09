@@ -232,7 +232,9 @@ export class ReservationsService {
     await this.audit.record(trx, { organizationId: user.organizationId, actorId: user.userId, entityType: 'money_reservation', entityId: before.id, action: 'reopened', before, after: { ...reopened, reason } });
 
     if (!before.commitment_id) return;
-    const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', before.commitment_id).forUpdate().executeTakeFirstOrThrow();
+    // Lock order everywhere: transaction → reservation(s) → commitment. The successor reservation must be
+    // locked before the commitment; settling the successor concurrently takes successor → commitment, and
+    // the reverse order here deadlocked under real network latency (seen on Neon).
     const successor = await trx
       .selectFrom('money_reservations')
       .selectAll()
@@ -240,6 +242,7 @@ export class ReservationsService {
       .where('status', '!=', 'cancelled')
       .forUpdate()
       .executeTakeFirst();
+    const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', before.commitment_id).forUpdate().executeTakeFirstOrThrow();
     if (successor && successor.status === 'active') {
       const cancelled = await trx
         .updateTable('money_reservations')
