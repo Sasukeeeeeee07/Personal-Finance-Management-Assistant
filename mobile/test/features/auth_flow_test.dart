@@ -9,7 +9,18 @@ import '../support/app_harness.dart';
 void main() {
   group('router redirect rule', () {
     test('sends each auth status to the right place', () {
-      expect(authRedirect(AuthStatus.restoring, Routes.profile), Routes.restoring);
+      // While restoring, the requested page is remembered and restored afterwards (browser refresh).
+      expect(authRedirect(AuthStatus.restoring, Routes.profile), '/loading?from=%2Fprofile');
+      expect(authRedirect(AuthStatus.restoring, Routes.restoring, uri: '/loading?from=%2Fgoals'), isNull);
+      expect(authRedirect(AuthStatus.signedIn, Routes.restoring, uri: '/loading?from=%2Fgoals'), '/goals');
+      expect(authRedirect(AuthStatus.signedIn, Routes.restoring, uri: '/loading?from=%2Fsign-in'), Routes.home);
+      expect(authRedirect(AuthStatus.signedIn, Routes.restoring, uri: '/loading?from=https%3A%2F%2Fevil.example'), Routes.home);
+      expect(authRedirect(AuthStatus.signedIn, Routes.restoring), Routes.home);
+      // Email links work in every state.
+      for (final s in AuthStatus.values) {
+        expect(authRedirect(s, Routes.resetPassword), isNull);
+        expect(authRedirect(s, Routes.verifyEmail), isNull);
+      }
       expect(authRedirect(AuthStatus.signedOut, Routes.profile), Routes.signIn);
       expect(authRedirect(AuthStatus.signedOut, Routes.register), isNull);
       expect(authRedirect(AuthStatus.signedIn, Routes.signIn), Routes.home);

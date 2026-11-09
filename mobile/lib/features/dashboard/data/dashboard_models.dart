@@ -258,6 +258,7 @@ class TransactionItem {
     required this.description,
     required this.source,
     required this.isHistorical,
+    this.version = 1,
   });
 
   final String id;
@@ -273,6 +274,9 @@ class TransactionItem {
   final String? description;
   final String source;
   final bool isHistorical;
+
+  /// Optimistic-lock version; edits must send the version they were based on.
+  final int version;
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
@@ -295,6 +299,7 @@ class TransactionItem {
     description: j['description'] as String?,
     source: j['source'] as String,
     isHistorical: j['isHistorical'] as bool,
+    version: j['version'] as int,
   );
 }
 

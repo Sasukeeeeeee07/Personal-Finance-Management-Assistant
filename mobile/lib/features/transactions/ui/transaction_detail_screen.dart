@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/format.dart';
@@ -7,20 +8,56 @@ import '../../dashboard/data/dashboard_models.dart';
 import '../../dashboard/state/dashboard_providers.dart';
 import '../../dashboard/ui/dashboard_sections.dart';
 import '../../dashboard/ui/section_card.dart';
+import '../../../shared/forms.dart';
+import '../../finance/finance_providers.dart';
+import 'transaction_form_screen.dart';
 
-/// Read-only transaction details (opened from the dashboard). Editing arrives with the
-/// Transactions module.
+/// Transaction details with edit and delete. Deleting never erases history: the backend posts
+/// reversing ledger entries and keeps the audit trail.
 class TransactionDetailScreen extends ConsumerWidget {
   const TransactionDetailScreen({super.key, required this.id});
 
   final String id;
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final ok = await confirmAction(
+      context,
+      title: 'Delete this transaction?',
+      message:
+          'It will no longer count in your balances, budgets or reports. The change is kept in the transaction history. If it paid a Money Lock bill, that bill is reserved again.',
+      confirmLabel: 'Delete transaction',
+    );
+    if (!ok || !context.mounted) return;
+    try {
+      await ref.read(financeApiProvider).deleteTransaction(id);
+      refreshFinancialData(ref);
+      if (!context.mounted) return;
+      showMessage(context, 'Transaction deleted.');
+      context.pop();
+    } catch (e) {
+      if (context.mounted) showMessage(context, userMessage(e), error: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(transactionDetailProvider(id));
     final lookups = ref.watch(lookupsProvider).value ?? Lookups.empty;
     return Scaffold(
-      appBar: AppBar(title: const Text('Transaction')),
+      appBar: AppBar(
+        title: const Text('Transaction'),
+        actions: [
+          if (detail.value != null) ...[
+            IconButton(
+              key: const Key('tx.edit'),
+              tooltip: 'Edit',
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => context.push('/transactions/edit', extra: TransactionFormArgs(existing: detail.value)),
+            ),
+            IconButton(key: const Key('tx.delete'), tooltip: 'Delete', icon: const Icon(Icons.delete_outline), onPressed: () => _delete(context, ref)),
+          ],
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () => ref.refresh(transactionDetailProvider(id).future).then<void>((_) {}, onError: (Object _) {}),
         child: ListView(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
@@ -152,6 +153,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             leading: Icon(Icons.lock_outline),
                             title: Text('Your financial records are private'),
                             subtitle: Text('Organization admins can manage members but never see your accounts or transactions.'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: Space.lg),
+                    Card(
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.account_balance_outlined),
+                            title: const Text('Accounts'),
+                            subtitle: const Text('Bank accounts, cash, wallets and cards'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/accounts'),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.bar_chart_outlined),
+                            title: const Text('Reports'),
+                            subtitle: const Text('Monthly income, spending by category and trends'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/reports'),
                           ),
                         ],
                       ),

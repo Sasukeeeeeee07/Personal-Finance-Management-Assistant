@@ -17,6 +17,11 @@ class AuthApi {
 
   Future<void> forgotPassword(String email) => _client.post<dynamic>('/auth/forgot-password', body: {'email': email}, auth: false);
 
+  Future<void> resetPassword(String token, String password) =>
+      _client.post<dynamic>('/auth/reset-password', body: {'token': token, 'password': password}, auth: false);
+
+  Future<void> verifyEmail(String token) => _client.post<dynamic>('/auth/verify-email', body: {'token': token}, auth: false);
+
   Future<CurrentUser> me() async => CurrentUser.fromJson(await _client.get<Map<String, dynamic>>('/auth/me'));
 
   Future<void> resendVerification() => _client.post<dynamic>('/auth/resend-verification');
