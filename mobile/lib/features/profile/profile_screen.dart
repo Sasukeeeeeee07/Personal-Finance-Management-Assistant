@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/api_error.dart';
 import '../../core/providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../shared/forms.dart';
 import '../../shared/widgets.dart';
 import '../auth/state/auth_controller.dart';
 
@@ -82,111 +83,113 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: RefreshIndicator(
-        onRefresh: _refresh,
-        child: ListView(
-          padding: const EdgeInsets.all(Space.lg),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(radius: 28, child: Text(_initials(user.fullName), style: text.titleMedium)),
-                        const SizedBox(width: Space.lg),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(user.fullName, style: text.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
-                              Text(user.email, style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-                            ],
+      body: ReadableWidth(
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: ListView(
+            padding: const EdgeInsets.all(Space.lg),
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 560),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          CircleAvatar(radius: 28, child: Text(_initials(user.fullName), style: text.titleMedium)),
+                          const SizedBox(width: Space.lg),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(user.fullName, style: text.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
+                                Text(user.email, style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: Space.xl),
+                      if (_message != null) ...[MessageBanner(message: _message!, tone: _tone), const SizedBox(height: Space.lg)],
+                      if (!user.emailVerified) ...[
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(Space.lg),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Confirm your email', style: text.titleMedium),
+                                const SizedBox(height: Space.xs),
+                                Text(
+                                  'We sent a link to ${user.email}. Confirming it lets you recover your account if you forget your password.',
+                                  style: text.bodyMedium,
+                                ),
+                                const SizedBox(height: Space.md),
+                                OutlinedButton.icon(
+                                  onPressed: _sendingVerification ? null : _resendVerification,
+                                  icon: const Icon(Icons.mark_email_read_outlined),
+                                  label: Text(_sendingVerification ? 'Sending…' : 'Resend verification email'),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                        const SizedBox(height: Space.lg),
                       ],
-                    ),
-                    const SizedBox(height: Space.xl),
-                    if (_message != null) ...[MessageBanner(message: _message!, tone: _tone), const SizedBox(height: Space.lg)],
-                    if (!user.emailVerified) ...[
                       Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(Space.lg),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Confirm your email', style: text.titleMedium),
-                              const SizedBox(height: Space.xs),
-                              Text(
-                                'We sent a link to ${user.email}. Confirming it lets you recover your account if you forget your password.',
-                                style: text.bodyMedium,
+                        child: Column(
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.verified_user_outlined),
+                              title: const Text('Email'),
+                              subtitle: Text(user.emailVerified ? 'Verified' : 'Not verified yet'),
+                            ),
+                            if (org != null)
+                              ListTile(
+                                leading: const Icon(Icons.workspaces_outline),
+                                title: Text(org.name),
+                                subtitle: Text('${_roleLabel(org.role)} · ${org.plan[0].toUpperCase()}${org.plan.substring(1)} plan'),
                               ),
-                              const SizedBox(height: Space.md),
-                              OutlinedButton.icon(
-                                onPressed: _sendingVerification ? null : _resendVerification,
-                                icon: const Icon(Icons.mark_email_read_outlined),
-                                label: Text(_sendingVerification ? 'Sending…' : 'Resend verification email'),
-                              ),
-                            ],
-                          ),
+                            const ListTile(
+                              leading: Icon(Icons.lock_outline),
+                              title: Text('Your financial records are private'),
+                              subtitle: Text('Organization admins can manage members but never see your accounts or transactions.'),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: Space.lg),
-                    ],
-                    Card(
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.verified_user_outlined),
-                            title: const Text('Email'),
-                            subtitle: Text(user.emailVerified ? 'Verified' : 'Not verified yet'),
-                          ),
-                          if (org != null)
+                      Card(
+                        child: Column(
+                          children: [
                             ListTile(
-                              leading: const Icon(Icons.workspaces_outline),
-                              title: Text(org.name),
-                              subtitle: Text('${_roleLabel(org.role)} · ${org.plan[0].toUpperCase()}${org.plan.substring(1)} plan'),
+                              leading: const Icon(Icons.account_balance_outlined),
+                              title: const Text('Accounts'),
+                              subtitle: const Text('Bank accounts, cash, wallets and cards'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.push('/accounts'),
                             ),
-                          const ListTile(
-                            leading: Icon(Icons.lock_outline),
-                            title: Text('Your financial records are private'),
-                            subtitle: Text('Organization admins can manage members but never see your accounts or transactions.'),
-                          ),
-                        ],
+                            ListTile(
+                              leading: const Icon(Icons.bar_chart_outlined),
+                              title: const Text('Reports'),
+                              subtitle: const Text('Monthly income, spending by category and trends'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.push('/reports'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: Space.lg),
-                    Card(
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.account_balance_outlined),
-                            title: const Text('Accounts'),
-                            subtitle: const Text('Bank accounts, cash, wallets and cards'),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.push('/accounts'),
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.bar_chart_outlined),
-                            title: const Text('Reports'),
-                            subtitle: const Text('Monthly income, spending by category and trends'),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () => context.push('/reports'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: Space.xl),
-                    PrimaryButton(key: const Key('profile.signOut'), label: 'Sign out', busy: _signingOut, onPressed: () => _signOut()),
-                    const SizedBox(height: Space.md),
-                    OutlinedButton(onPressed: _signingOut ? null : _signOutEverywhere, child: const Text('Sign out of all devices')),
-                  ],
+                      const SizedBox(height: Space.xl),
+                      PrimaryButton(key: const Key('profile.signOut'), label: 'Sign out', busy: _signingOut, onPressed: () => _signOut()),
+                      const SizedBox(height: Space.md),
+                      OutlinedButton(onPressed: _signingOut ? null : _signOutEverywhere, child: const Text('Sign out of all devices')),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

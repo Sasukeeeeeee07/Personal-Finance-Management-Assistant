@@ -21,58 +21,60 @@ class AccountsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accounts = ref.watch(accountsProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Accounts')),
+      appBar: AppBar(title: const Text('Accounts'), leading: backTo(context, '/profile')),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-account',
         onPressed: () => context.push('/accounts/new'),
         icon: const Icon(Icons.add),
         label: const Text('Add account'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.refresh(accountsProvider.future).then<void>((_) {}, onError: (Object _) {}),
-        child: accounts.when(
-          skipLoadingOnRefresh: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _Retry(message: userMessage(e), onRetry: () => ref.invalidate(accountsProvider)),
-          data: (list) {
-            if (list.isEmpty) {
-              return ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(Space.xl),
-                children: const [
-                  Icon(Icons.account_balance_outlined, size: 48),
-                  SizedBox(height: Space.md),
-                  Text(
-                    'No accounts yet. Add your bank accounts, cash, wallets and credit cards with their current balances to start tracking.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              );
-            }
-            final active = list.where((a) => !a.archived).toList();
-            final groups = <(String, List<Account>)>[
-              ('Spendable money', active.where((a) => a.isLiquid).toList()),
-              ('Credit cards', active.where((a) => a.isLiability).toList()),
-              ('Savings and deposits', active.where((a) => !a.isLiquid && !a.isLiability).toList()),
-              ('Archived', list.where((a) => a.archived).toList()),
-            ];
-            return ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, 96),
-              children: [
-                for (final (title, items) in groups)
-                  if (items.isNotEmpty) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: Space.lg, bottom: Space.sm),
-                      child: Text(title, style: Theme.of(context).textTheme.titleSmall),
-                    ),
-                    Card(
-                      child: Column(children: [for (final a in items) _AccountTile(account: a)]),
+      body: ReadableWidth(
+        child: RefreshIndicator(
+          onRefresh: () => ref.refresh(accountsProvider.future).then<void>((_) {}, onError: (Object _) {}),
+          child: accounts.when(
+            skipLoadingOnRefresh: true,
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => _Retry(message: userMessage(e), onRetry: () => ref.invalidate(accountsProvider)),
+            data: (list) {
+              if (list.isEmpty) {
+                return ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(Space.xl),
+                  children: const [
+                    Icon(Icons.account_balance_outlined, size: 48),
+                    SizedBox(height: Space.md),
+                    Text(
+                      'No accounts yet. Add your bank accounts, cash, wallets and credit cards with their current balances to start tracking.',
+                      textAlign: TextAlign.center,
                     ),
                   ],
-              ],
-            );
-          },
+                );
+              }
+              final active = list.where((a) => !a.archived).toList();
+              final groups = <(String, List<Account>)>[
+                ('Spendable money', active.where((a) => a.isLiquid).toList()),
+                ('Credit cards', active.where((a) => a.isLiability).toList()),
+                ('Savings and deposits', active.where((a) => !a.isLiquid && !a.isLiability).toList()),
+                ('Archived', list.where((a) => a.archived).toList()),
+              ];
+              return ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(Space.lg, Space.sm, Space.lg, 96),
+                children: [
+                  for (final (title, items) in groups)
+                    if (items.isNotEmpty) ...[
+                      Padding(
+                        padding: const EdgeInsets.only(top: Space.lg, bottom: Space.sm),
+                        child: Text(title, style: Theme.of(context).textTheme.titleSmall),
+                      ),
+                      Card(
+                        child: Column(children: [for (final a in items) _AccountTile(account: a)]),
+                      ),
+                    ],
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -189,7 +191,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
       refreshFinancialData(ref);
       if (!mounted) return;
       showMessage(context, 'Account added.');
-      context.pop();
+      leave(context, '/accounts');
     } on ApiError catch (e) {
       setState(() {
         _fieldErrors = {for (final entry in e.fields.entries) entry.key: entry.value.join(' ')};
@@ -204,7 +206,7 @@ class _AccountFormScreenState extends ConsumerState<AccountFormScreen> {
   Widget build(BuildContext context) {
     const gap = SizedBox(height: Space.lg);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add account')),
+      appBar: AppBar(title: const Text('Add account'), leading: backTo(context, '/accounts')),
       body: Form(
         key: _form,
         child: FormBody(
@@ -340,14 +342,19 @@ class AccountDetailScreen extends ConsumerWidget {
     final a = accounts.value?.where((x) => x.id == id).firstOrNull;
     if (a == null) {
       return Scaffold(
-        appBar: AppBar(),
-        body: accounts.isLoading ? const Center(child: CircularProgressIndicator()) : const Center(child: Text('Account not found.')),
+        appBar: AppBar(leading: backTo(context, '/accounts')),
+        body: accounts.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : accounts.hasError
+            ? _Retry(message: userMessage(accounts.error!), onRetry: () => ref.invalidate(accountsProvider))
+            : const Center(child: Text('Account not found. It may have been removed.')),
       );
     }
     final text = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(a.name),
+        leading: backTo(context, '/accounts'),
         actions: [
           IconButton(
             tooltip: a.archived ? 'Unarchive' : 'Archive',
@@ -356,51 +363,55 @@ class AccountDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(Space.lg),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(Space.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(a.isLiability ? 'Amount owed' : 'Balance', style: text.bodyMedium),
-                    Text(
-                      a.isLiability ? (a.outstanding ?? Money.zero).format() : a.balance.format(),
-                      style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    if (a.availableCredit != null) Text('Available credit ${a.availableCredit!.format()}', style: text.bodySmall),
-                    Text('${a.typeLabel} · tracked since ${Fmt.day(a.trackingStartDate)}', style: text.bodySmall),
-                    const SizedBox(height: Space.md),
-                    Wrap(
-                      spacing: Space.sm,
-                      runSpacing: Space.sm,
-                      children: [
-                        if (!a.archived)
-                          FilledButton.tonalIcon(
-                            onPressed: () => context.push(
-                              '/transactions/new',
-                              extra: TransactionFormArgs(type: 'transfer', accountId: a.isLiability ? null : a.id),
+      body: ReadableWidth(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(Space.lg),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(Space.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(a.isLiability ? 'Amount owed' : 'Balance', style: text.bodyMedium),
+                      Text(
+                        a.isLiability ? (a.outstanding ?? Money.zero).format() : a.balance.format(),
+                        style: text.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      if (a.availableCredit != null) Text('Available credit ${a.availableCredit!.format()}', style: text.bodySmall),
+                      Text('${a.typeLabel} · tracked since ${Fmt.day(a.trackingStartDate)}', style: text.bodySmall),
+                      const SizedBox(height: Space.md),
+                      Wrap(
+                        spacing: Space.sm,
+                        runSpacing: Space.sm,
+                        children: [
+                          if (!a.archived)
+                            FilledButton.tonalIcon(
+                              onPressed: () => context.push(
+                                '/transactions/new',
+                                extra: a.isLiability
+                                    ? TransactionFormArgs(type: 'transfer', destinationAccountId: a.id)
+                                    : TransactionFormArgs(type: 'transfer', accountId: a.id),
+                              ),
+                              icon: const Icon(Icons.swap_horiz),
+                              label: Text(a.isLiability ? 'Pay card bill' : 'Transfer'),
                             ),
-                            icon: const Icon(Icons.swap_horiz),
-                            label: Text(a.isLiability ? 'Pay card bill' : 'Transfer'),
+                          OutlinedButton.icon(
+                            onPressed: () => _reconcile(context, ref, a),
+                            icon: const Icon(Icons.fact_check_outlined),
+                            label: const Text('Check against bank'),
                           ),
-                        OutlinedButton.icon(
-                          onPressed: () => _reconcile(context, ref, a),
-                          icon: const Icon(Icons.fact_check_outlined),
-                          label: const Text('Check against bank'),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(child: TransactionsScreen(accountId: a.id, embedded: true)),
-        ],
+            Expanded(child: TransactionsScreen(accountId: a.id, embedded: true)),
+          ],
+        ),
       ),
     );
   }

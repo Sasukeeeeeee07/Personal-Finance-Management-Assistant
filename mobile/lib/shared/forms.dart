@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../core/api/api_error.dart';
@@ -132,7 +133,9 @@ class FormBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SafeArea(
-    child: Center(
+    // Top-aligned: short forms start under the app bar instead of floating mid-screen.
+    child: Align(
+      alignment: Alignment.topCenter,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: ConstrainedBox(
@@ -143,3 +146,35 @@ class FormBody extends StatelessWidget {
     ),
   );
 }
+
+/// Keeps lists and detail pages at a readable width on desktop browsers; no effect on phones.
+class ReadableWidth extends StatelessWidget {
+  const ReadableWidth({super.key, required this.child, this.maxWidth = 760});
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
+}
+
+/// Close the current screen. After a browser refresh or a deep link there is no previous page to
+/// return to, so go to [fallback] instead of leaving the user on a finished form.
+void leave(BuildContext context, String fallback, [Object? result]) {
+  final router = GoRouter.of(context);
+  if (router.canPop()) {
+    router.pop(result);
+  } else {
+    router.go(fallback);
+  }
+}
+
+/// App bar back arrow that also works when the page was opened directly (no history).
+Widget? backTo(BuildContext context, String fallback) =>
+    GoRouter.of(context).canPop() ? null : IconButton(tooltip: 'Back', icon: const BackButtonIcon(), onPressed: () => context.go(fallback));

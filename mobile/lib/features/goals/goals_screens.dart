@@ -32,36 +32,38 @@ class GoalsScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Add goal'),
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.refresh(goalsProvider.future).then<void>((_) {}, onError: (Object _) {}),
-        child: goals.when(
-          skipLoadingOnRefresh: true,
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(Space.xl),
-            children: [
-              Text(userMessage(e), textAlign: TextAlign.center),
-              Center(
-                child: TextButton(onPressed: () => ref.invalidate(goalsProvider), child: const Text('Try again')),
-              ),
-            ],
-          ),
-          data: (list) => list.isEmpty
-              ? ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(Space.xl),
-                  children: const [
-                    Icon(Icons.flag_outlined, size: 48),
-                    SizedBox(height: Space.md),
-                    Text('No goals yet. Add an emergency fund, a trip or anything you are saving for.', textAlign: TextAlign.center),
-                  ],
-                )
-              : ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, 96),
-                  children: [for (final g in list) _GoalCard(goal: g)],
+      body: ReadableWidth(
+        child: RefreshIndicator(
+          onRefresh: () => ref.refresh(goalsProvider.future).then<void>((_) {}, onError: (Object _) {}),
+          child: goals.when(
+            skipLoadingOnRefresh: true,
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(Space.xl),
+              children: [
+                Text(userMessage(e), textAlign: TextAlign.center),
+                Center(
+                  child: TextButton(onPressed: () => ref.invalidate(goalsProvider), child: const Text('Try again')),
                 ),
+              ],
+            ),
+            data: (list) => list.isEmpty
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(Space.xl),
+                    children: const [
+                      Icon(Icons.flag_outlined, size: 48),
+                      SizedBox(height: Space.md),
+                      Text('No goals yet. Add an emergency fund, a trip or anything you are saving for.', textAlign: TextAlign.center),
+                    ],
+                  )
+                : ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, 96),
+                    children: [for (final g in list) _GoalCard(goal: g)],
+                  ),
+          ),
         ),
       ),
     );
@@ -164,7 +166,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
       refreshFinancialData(ref);
       if (!mounted) return;
       showMessage(context, 'Goal added.');
-      context.pop();
+      leave(context, '/goals');
     } on ApiError catch (e) {
       setState(() => _error = e.fields.isEmpty ? e.message : e.fields.values.expand((m) => m).join(' '));
     } finally {
@@ -176,7 +178,7 @@ class _GoalFormScreenState extends ConsumerState<GoalFormScreen> {
   Widget build(BuildContext context) {
     const gap = SizedBox(height: Space.lg);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add goal')),
+      appBar: AppBar(title: const Text('Add goal'), leading: backTo(context, '/goals')),
       body: Form(
         key: _form,
         child: FormBody(
@@ -338,10 +340,22 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
     final api = ref.read(financeApiProvider);
     final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: Text(detail.value?.goal.name ?? 'Goal')),
+      appBar: AppBar(title: Text(detail.value?.goal.name ?? 'Goal'), leading: backTo(context, '/goals')),
       body: detail.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(userMessage(e))),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(Space.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(userMessage(e), textAlign: TextAlign.center),
+                const SizedBox(height: Space.md),
+                OutlinedButton(onPressed: () => ref.invalidate(goalDetailProvider(widget.id)), child: const Text('Try again')),
+              ],
+            ),
+          ),
+        ),
         data: (d) {
           final g = d.goal;
           final archived = g.status == 'archived';
@@ -411,7 +425,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
                           confirmLabel: 'Archive goal',
                         );
                         if (ok) await _run(() => api.archiveGoal(g.id), 'Goal archived.');
-                        if (ok && context.mounted) context.pop();
+                        if (ok && context.mounted) leave(context, '/goals');
                       },
                       child: const Text('Archive'),
                     ),

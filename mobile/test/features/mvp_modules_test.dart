@@ -221,6 +221,24 @@ void main() {
     expect(body['trackingStartDate'], matches(RegExp(r'^\d{4}-\d{2}-\d{2}$')));
   });
 
+  testWidgets('Pay card bill opens a transfer with the card already chosen as the destination', (tester) async {
+    final backend = await boot(tester);
+    backend.responses['POST /transactions'] = (201, createdResponse());
+    final card = (fixture('accounts.json') as List).cast<Map<String, dynamic>>().firstWhere((a) => a['type'] == 'credit_card');
+    await tab(tester, 'Profile');
+    await tapVisible(tester, find.text('Accounts'));
+    await tapVisible(tester, find.textContaining(card['name'] as String).first);
+    await tapVisible(tester, find.text('Pay card bill'));
+    expect(find.textContaining('is not income or spending'), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('tx.amount')), '5000');
+    await choose(tester, const Key('tx.account'), 'HDFC Savings ••4821');
+    await tapVisible(tester, find.byKey(const Key('tx.submit')));
+    final body = backend.sent('POST', '/transactions').single.body as Map;
+    expect(body['type'], 'transfer');
+    expect(body['destinationAccountId'], card['id']);
+    expect(body.containsKey('categoryId'), isFalse);
+  });
+
   testWidgets('budgets: create an overall monthly budget', (tester) async {
     final backend = await boot(tester);
     await tab(tester, 'Budget');

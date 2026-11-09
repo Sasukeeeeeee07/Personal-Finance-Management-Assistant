@@ -28,52 +28,54 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     final report = ref.watch(monthlyReportProvider(_key));
     return Scaffold(
-      appBar: AppBar(title: const Text('Reports')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.sm),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  tooltip: 'Previous month',
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => setState(() => _month = DateTime(_month.year, _month.month - 1)),
-                ),
-                SizedBox(
-                  width: 160,
-                  child: Text(DateFormat('MMMM yyyy').format(_month), textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-                ),
-                IconButton(
-                  tooltip: 'Next month',
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: _isCurrent ? null : () => setState(() => _month = DateTime(_month.year, _month.month + 1)),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => ref.refresh(monthlyReportProvider(_key).future).then<void>((_) {}, onError: (Object _) {}),
-              child: report.when(
-                skipLoadingOnRefresh: true,
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(Space.xl),
-                  children: [
-                    Text(userMessage(e), textAlign: TextAlign.center),
-                    Center(
-                      child: TextButton(onPressed: () => ref.invalidate(monthlyReportProvider(_key)), child: const Text('Try again')),
-                    ),
-                  ],
-                ),
-                data: (r) => _Report(report: r),
+      appBar: AppBar(title: const Text('Reports'), leading: backTo(context, '/profile')),
+      body: ReadableWidth(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.sm),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    tooltip: 'Previous month',
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: () => setState(() => _month = DateTime(_month.year, _month.month - 1)),
+                  ),
+                  SizedBox(
+                    width: 160,
+                    child: Text(DateFormat('MMMM yyyy').format(_month), textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+                  ),
+                  IconButton(
+                    tooltip: 'Next month',
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: _isCurrent ? null : () => setState(() => _month = DateTime(_month.year, _month.month + 1)),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(monthlyReportProvider(_key).future).then<void>((_) {}, onError: (Object _) {}),
+                child: report.when(
+                  skipLoadingOnRefresh: true,
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(Space.xl),
+                    children: [
+                      Text(userMessage(e), textAlign: TextAlign.center),
+                      Center(
+                        child: TextButton(onPressed: () => ref.invalidate(monthlyReportProvider(_key)), child: const Text('Try again')),
+                      ),
+                    ],
+                  ),
+                  data: (r) => _Report(report: r),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

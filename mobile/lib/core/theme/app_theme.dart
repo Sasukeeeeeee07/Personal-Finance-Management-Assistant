@@ -81,6 +81,10 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.md)),
         ),
       ),
+      // Five destinations must fit a 360–375 px phone without wrapping "Transactions".
+      navigationBarTheme: NavigationBarThemeData(
+        labelTextStyle: WidgetStatePropertyAll(base.textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.w500)),
+      ),
       cardTheme: CardThemeData(
         elevation: 0,
         margin: EdgeInsets.zero,

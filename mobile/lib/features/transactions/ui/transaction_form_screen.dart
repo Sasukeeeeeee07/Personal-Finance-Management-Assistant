@@ -15,12 +15,15 @@ import '../../finance/finance_providers.dart';
 
 /// What the form is opened for.
 class TransactionFormArgs {
-  const TransactionFormArgs({this.existing, this.type, this.accountId, this.payReservation});
+  const TransactionFormArgs({this.existing, this.type, this.accountId, this.destinationAccountId, this.payReservation});
 
   /// Edit this transaction (sends a PATCH with its version).
   final TransactionDetail? existing;
   final String? type;
   final String? accountId;
+
+  /// Transfers only: preselects where the money goes (e.g. the card when paying a card bill).
+  final String? destinationAccountId;
 
   /// Pay this Money Lock reservation: creates the expense and settles the reservation in one step.
   final Reservation? payReservation;
@@ -78,6 +81,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     } else {
       _type = r != null ? 'expense' : (widget.args.type ?? 'expense');
       _accountId = r?.accountId ?? widget.args.accountId;
+      if (_type == 'transfer') _destinationId = widget.args.destinationAccountId;
       _amount.text = r?.targetAmount.toApi() ?? '';
       _counterparty.text = r?.name ?? '';
       _planned = r != null;
@@ -138,7 +142,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         refreshFinancialData(ref);
         if (mounted) {
           showMessage(context, 'Transaction updated.');
-          Navigator.of(context).pop(true);
+          leave(context, '/transactions', true);
         }
         return;
       }
@@ -160,7 +164,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
         ...created.budgetAlerts,
       ];
       showMessage(context, lines.join('\n'));
-      Navigator.of(context).pop(true);
+      leave(context, _paying != null ? '/plan' : '/transactions', true);
     } on ApiError catch (e) {
       if (!mounted) return;
       if (e.code == 'reservation_amount_mismatch') {
@@ -205,7 +209,7 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     final title = _editing ? 'Edit transaction' : (_paying != null ? 'Pay ${_paying!.name}' : 'Add transaction');
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(title: Text(title), leading: backTo(context, '/transactions')),
       body: accounts.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(

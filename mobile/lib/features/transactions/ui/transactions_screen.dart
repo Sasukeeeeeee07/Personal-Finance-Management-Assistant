@@ -43,43 +43,45 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Add'),
       ),
-      body: Column(
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.sm),
-            child: Row(
-              children: [
-                for (final (value, label) in const [(null, 'All'), ('expense', 'Expenses'), ('income', 'Income'), ('transfer', 'Transfers')])
-                  Padding(
-                    padding: const EdgeInsets.only(right: Space.sm),
-                    child: ChoiceChip(label: Text(label), selected: _type == value, onSelected: (_) => setState(() => _type = value)),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => ref.refresh(transactionsListProvider(_filter).future).then<void>((_) {}, onError: (Object _) {}),
-              child: page.when(
-                skipLoadingOnRefresh: true,
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(Space.xl),
-                  children: [
-                    Text(userMessage(e), textAlign: TextAlign.center),
-                    const SizedBox(height: Space.md),
-                    Center(
-                      child: FilledButton.tonal(onPressed: () => ref.invalidate(transactionsListProvider(_filter)), child: const Text('Try again')),
+      body: ReadableWidth(
+        child: Column(
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: Space.lg, vertical: Space.sm),
+              child: Row(
+                children: [
+                  for (final (value, label) in const [(null, 'All'), ('expense', 'Expenses'), ('income', 'Income'), ('transfer', 'Transfers')])
+                    Padding(
+                      padding: const EdgeInsets.only(right: Space.sm),
+                      child: ChoiceChip(label: Text(label), selected: _type == value, onSelected: (_) => setState(() => _type = value)),
                     ),
-                  ],
-                ),
-                data: (p) => _list(context, p, lookups),
+                ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => ref.refresh(transactionsListProvider(_filter).future).then<void>((_) {}, onError: (Object _) {}),
+                child: page.when(
+                  skipLoadingOnRefresh: true,
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(Space.xl),
+                    children: [
+                      Text(userMessage(e), textAlign: TextAlign.center),
+                      const SizedBox(height: Space.md),
+                      Center(
+                        child: FilledButton.tonal(onPressed: () => ref.invalidate(transactionsListProvider(_filter)), child: const Text('Try again')),
+                      ),
+                    ],
+                  ),
+                  data: (p) => _list(context, p, lookups),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

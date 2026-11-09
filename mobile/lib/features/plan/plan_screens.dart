@@ -51,7 +51,9 @@ class _PlanScreenState extends ConsumerState<PlanScreen> with SingleTickerProvid
         icon: const Icon(Icons.add),
         label: Text(onLock ? 'Add commitment' : 'Add budget'),
       ),
-      body: TabBarView(controller: _tabs, children: const [_BudgetsTab(), _MoneyLockTab()]),
+      body: ReadableWidth(
+        child: TabBarView(controller: _tabs, children: const [_BudgetsTab(), _MoneyLockTab()]),
+      ),
     );
   }
 }
@@ -229,7 +231,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
       refreshFinancialData(ref);
       if (!mounted) return;
       showMessage(context, 'Budget created.');
-      context.pop();
+      leave(context, '/plan');
     } on ApiError catch (e) {
       setState(() => _error = e.fields.isEmpty ? e.message : e.fields.values.expand((m) => m).join(' '));
     } finally {
@@ -243,7 +245,7 @@ class _BudgetFormScreenState extends ConsumerState<BudgetFormScreen> {
     final cats = categoriesOf(lookups, 'expense');
     const gap = SizedBox(height: Space.lg);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add budget')),
+      appBar: AppBar(title: const Text('Add budget'), leading: backTo(context, '/plan')),
       body: Form(
         key: _form,
         child: FormBody(
@@ -558,7 +560,7 @@ class _CommitmentFormScreenState extends ConsumerState<CommitmentFormScreen> {
       refreshFinancialData(ref);
       if (!mounted) return;
       showMessage(context, '${_name.text.trim()} added and money reserved.');
-      context.pop();
+      leave(context, '/plan');
     } on ApiError catch (e) {
       setState(() => _error = e.fields.isEmpty ? e.message : e.fields.values.expand((m) => m).join(' '));
     } finally {
@@ -572,7 +574,7 @@ class _CommitmentFormScreenState extends ConsumerState<CommitmentFormScreen> {
     final cats = categoriesOf(ref.watch(lookupsProvider).value ?? Lookups.empty, 'expense');
     const gap = SizedBox(height: Space.lg);
     return Scaffold(
-      appBar: AppBar(title: const Text('Add commitment')),
+      appBar: AppBar(title: const Text('Add commitment'), leading: backTo(context, '/plan')),
       body: Form(
         key: _form,
         child: FormBody(

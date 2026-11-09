@@ -33,7 +33,7 @@ class TransactionDetailScreen extends ConsumerWidget {
       refreshFinancialData(ref);
       if (!context.mounted) return;
       showMessage(context, 'Transaction deleted.');
-      context.pop();
+      leave(context, '/transactions');
     } catch (e) {
       if (context.mounted) showMessage(context, userMessage(e), error: true);
     }
@@ -46,6 +46,7 @@ class TransactionDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Transaction'),
+        leading: backTo(context, '/transactions'),
         actions: [
           if (detail.value != null) ...[
             IconButton(
@@ -58,33 +59,35 @@ class TransactionDetailScreen extends ConsumerWidget {
           ],
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () => ref.refresh(transactionDetailProvider(id).future).then<void>((_) {}, onError: (Object _) {}),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(Space.lg),
-          children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 640),
-                child: switch (detail) {
-                  AsyncData(:final value) => _Details(d: value, lookups: lookups),
-                  AsyncError(:final error) => Column(
-                    children: [
-                      const SizedBox(height: Space.xxl),
-                      Text(friendlyError(error), textAlign: TextAlign.center),
-                      const SizedBox(height: Space.md),
-                      FilledButton.tonal(onPressed: () => ref.invalidate(transactionDetailProvider(id)), child: const Text('Try again')),
-                    ],
-                  ),
-                  _ => const Padding(
-                    padding: EdgeInsets.only(top: Space.xxl),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                },
+      body: ReadableWidth(
+        child: RefreshIndicator(
+          onRefresh: () => ref.refresh(transactionDetailProvider(id).future).then<void>((_) {}, onError: (Object _) {}),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(Space.lg),
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: switch (detail) {
+                    AsyncData(:final value) => _Details(d: value, lookups: lookups),
+                    AsyncError(:final error) => Column(
+                      children: [
+                        const SizedBox(height: Space.xxl),
+                        Text(friendlyError(error), textAlign: TextAlign.center),
+                        const SizedBox(height: Space.md),
+                        FilledButton.tonal(onPressed: () => ref.invalidate(transactionDetailProvider(id)), child: const Text('Try again')),
+                      ],
+                    ),
+                    _ => const Padding(
+                      padding: EdgeInsets.only(top: Space.xxl),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
