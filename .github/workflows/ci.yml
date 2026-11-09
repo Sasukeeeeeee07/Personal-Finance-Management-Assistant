@@ -42,15 +42,20 @@ jobs:
         run: npm run build
 
   postgresql:
-    name: PostgreSQL 16 (migrations + integration tests)
+    name: PostgreSQL ${{ matrix.postgres }} (migrations + integration tests)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        # 16: CI baseline. 18: what Neon runs in production (PostgreSQL 18.6 on 2026-11-09).
+        postgres: ['16', '18']
     defaults:
       run:
         working-directory: backend
     services:
       postgres:
-        image: postgres:16
+        image: postgres:${{ matrix.postgres }}
         env:
           POSTGRES_USER: pfm
           POSTGRES_PASSWORD: pfm
@@ -97,6 +102,11 @@ jobs:
       - name: Check server version and encoding
         run: |
           psql -tAc "SELECT version()"
+          major=$(psql -tAc "SHOW server_version_num" | cut -c1-2)
+          if [ "$major" != "${{ matrix.postgres }}" ]; then
+            echo "::error::Expected PostgreSQL ${{ matrix.postgres }}, got $major"
+            exit 1
+          fi
           enc=$(psql -tAc "SHOW server_encoding")
           echo "server_encoding=$enc"
           if [ "$enc" != "UTF8" ]; then

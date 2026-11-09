@@ -101,6 +101,9 @@ export class ReservationsService {
   /** Cancelling a commitment releases its open reservation back into available-to-spend. */
   async cancelCommitment(user: AuthUser, id: string) {
     return this.db.transaction().execute(async (trx) => {
+      // Lock order everywhere: transaction → reservation(s) → commitment. Lock the open reservations first
+      // (in id order); taking the commitment first would deadlock with a concurrent "mark paid".
+      await trx.selectFrom('money_reservations').select('id').where('commitment_id', '=', id).where('owner_id', '=', user.userId).where('status', '=', 'active').orderBy('id').forUpdate().execute();
       const c = await trx.selectFrom('financial_commitments').selectAll().where('id', '=', id).where('owner_id', '=', user.userId).forUpdate().executeTakeFirst();
       if (!c) throw notFound('Commitment');
       if (c.status !== 'active') throw new DomainError('commitment_not_active', 'This commitment is already closed.', HttpStatus.CONFLICT);

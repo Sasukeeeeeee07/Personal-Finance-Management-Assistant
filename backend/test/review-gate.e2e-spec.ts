@@ -128,6 +128,24 @@ describe('B1 · Reservation lifecycle', () => {
     expect(Number(s.liquidBalance) - held).toBe(Number(s.availableToSpend));
   });
 
+  it('concurrent "mark paid" and "cancel commitment" never deadlock and leave a consistent state', async () => {
+    const { u, bank } = await bankUser(t);
+    const { commitment, reservation: nov } = await rent(u, bank.id);
+    const [paid, cancel] = await Promise.all([
+      u.post('/transactions', { type: 'expense', amount: '8000', accountId: bank.id, occurredAt: now(), reservationId: nov.id }),
+      u.del(`/commitments/${commitment.id}`),
+    ]);
+    expect(cancel.status).toBe(200); // cancelling never fails, whichever runs first
+    expect([201, 409]).toContain(paid.status); // 409 = the reservation was already cancelled; never a 500
+    expect(await active(u)).toEqual([]); // nothing stays reserved for a cancelled commitment
+    const s = await summary(u);
+    // Paid first: the expense posted once. Cancelled first: the payment rolled back entirely (no expense).
+    expect(s.liquidBalance).toBe(paid.status === 201 ? '22000.00' : '30000.00');
+    expect(s.availableToSpend).toBe(s.liquidBalance);
+    const txns = (await u.get('/transactions').expect(200)).body.items;
+    expect(txns).toHaveLength(paid.status === 201 ? 1 : 0);
+  });
+
   it('concurrent deletes of the same payment reverse it once', async () => {
     const { u, bank } = await bankUser(t);
     const { reservation: nov } = await rent(u, bank.id);
