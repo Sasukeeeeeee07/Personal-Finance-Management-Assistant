@@ -1,13 +1,13 @@
 {
-  "id": "84a96c7c-987e-487a-aaa6-268fef6d80c7",
-  "email": "demo-1794127563665@example.test",
+  "id": "f6c1a998-68b1-4760-b9b5-533637154907",
+  "email": "demo-1794229302383@example.test",
   "fullName": "Asha Verma",
   "emailVerified": false,
   "platformRole": null,
-  "activeOrganizationId": "5f714d6a-2e5e-4233-a8cc-303666820a61",
+  "activeOrganizationId": "17790ea7-b3d0-489b-aa06-e971b7c568ba",
   "organizations": [
     {
-      "id": "5f714d6a-2e5e-4233-a8cc-303666820a61",
+      "id": "17790ea7-b3d0-489b-aa06-e971b7c568ba",
       "name": "Asha Verma's finances",
       "type": "personal",
       "plan": "free",

@@ -1,6 +1,6 @@
 [
   {
-    "id": "35021e63-8dda-442a-bbac-a839330e5405",
+    "id": "9effe40d-7a90-448d-90b1-fb8dc2cbda8a",
     "name": "EMI",
     "kind": "expense",
     "isEssential": true,
@@ -8,7 +8,7 @@
     "isCustom": false
   },
   {
-    "id": "cdf60a1f-6a49-456e-b8f3-89496db1185d",
+    "id": "cf92d886-06b2-4ac7-aa3d-74203ea034cf",
     "name": "Education",
     "kind": "expense",
     "isEssential": true,
@@ -16,7 +16,7 @@
     "isCustom": false
   },
   {
-    "id": "e17cfb7c-872a-4e6b-870b-e51ace04e827",
+    "id": "a9d92708-660a-44ee-b9a6-adc559d2456b",
     "name": "Electricity",
     "kind": "expense",
     "isEssential": true,
@@ -24,7 +24,7 @@
     "isCustom": false
   },
   {
-    "id": "18c0d690-182d-45e0-948d-e309634320ac",
+    "id": "94901422-7700-4534-ba97-81546182d931",
     "name": "Entertainment",
     "kind": "expense",
     "isEssential": false,
@@ -32,7 +32,7 @@
     "isCustom": false
   },
   {
-    "id": "0e3ae845-da71-4ea7-8cbf-2ec0d1658719",
+    "id": "587ba5d6-403e-4f1c-bfda-744167a5dfa4",
     "name": "Food",
     "kind": "expense",
     "isEssential": false,
@@ -40,7 +40,7 @@
     "isCustom": false
   },
   {
-    "id": "da915ad2-aa35-4dba-9267-a7f806236199",
+    "id": "3228a8c1-f64d-478b-8010-4390f7983b68",
     "name": "Groceries",
     "kind": "expense",
     "isEssential": true,
@@ -48,7 +48,7 @@
     "isCustom": false
   },
   {
-    "id": "52fb0ea2-2eee-4162-8b58-f35ce8819c5b",
+    "id": "f9e422a5-fa26-40d1-bb83-bf6e189a86f4",
     "name": "Healthcare",
     "kind": "expense",
     "isEssential": true,
@@ -56,7 +56,7 @@
     "isCustom": false
   },
   {
-    "id": "1f4bbc70-042a-4fa8-ae18-d1177a49f5eb",
+    "id": "25a0a88f-18bb-4988-a94c-512679128cc1",
     "name": "Internet",
     "kind": "expense",
     "isEssential": true,
@@ -64,7 +64,7 @@
     "isCustom": false
   },
   {
-    "id": "ce992821-9e54-46b9-8ebe-83223482242e",
+    "id": "a47526e6-7a8d-42ea-bd30-bd130b331eb4",
     "name": "Investments",
     "kind": "expense",
     "isEssential": false,
@@ -72,7 +72,7 @@
     "isCustom": false
   },
   {
-    "id": "e1ba769a-34c6-4373-b704-99af2ed3087f",
+    "id": "c1b70a1d-899b-45aa-9f66-c1985c3ec412",
     "name": "Miscellaneous",
     "kind": "expense",
     "isEssential": false,
@@ -80,7 +80,7 @@
     "isCustom": false
   },
   {
-    "id": "aa86659f-01f9-4ad6-9d87-2864efedb342",
+    "id": "e1eb0ead-aa83-4c05-aa16-25ce704f7dde",
     "name": "Mobile recharge",
     "kind": "expense",
     "isEssential": true,
@@ -88,7 +88,7 @@
     "isCustom": false
   },
   {
-    "id": "ce18305b-8af7-4211-9872-b1a2032d7662",
+    "id": "b705b593-5604-4464-a498-34b77ce8f368",
     "name": "Personal",
     "kind": "expense",
     "isEssential": false,
@@ -96,7 +96,7 @@
     "isCustom": false
   },
   {
-    "id": "62cfd48e-7118-453c-ada5-7b99c3f74f95",
+    "id": "e4ed6751-0572-47ed-9cf6-de24396234e5",
     "name": "Rent",
     "kind": "expense",
     "isEssential": true,
@@ -104,7 +104,7 @@
     "isCustom": false
   },
   {
-    "id": "c55d1ba3-bd06-4346-bf09-f778a8ca7ad9",
+    "id": "b16eae19-6171-438f-a7b1-e2cb3cf880c9",
     "name": "Shopping",
     "kind": "expense",
     "isEssential": false,
@@ -112,7 +112,7 @@
     "isCustom": false
   },
   {
-    "id": "8a56d3cd-dcb4-4aa6-8cba-d1e685d86f46",
+    "id": "e36fd789-f637-4761-ad48-43f90f49c08e",
     "name": "Subscriptions",
     "kind": "expense",
     "isEssential": false,
@@ -120,7 +120,7 @@
     "isCustom": false
   },
   {
-    "id": "3be64738-bf31-403b-8078-76629239f233",
+    "id": "75414497-b01f-49a6-bb9e-dd2a4226cd8f",
     "name": "Transportation",
     "kind": "expense",
     "isEssential": true,
@@ -128,7 +128,7 @@
     "isCustom": false
   },
   {
-    "id": "70f741de-234d-4b72-ad37-2fe269531b1a",
+    "id": "6241a4e6-ebcc-45e8-a5d7-cdbd72710819",
     "name": "Travel",
     "kind": "expense",
     "isEssential": false,
@@ -136,7 +136,7 @@
     "isCustom": false
   },
   {
-    "id": "dd1840f5-5967-4078-a8b1-cdab81fcd0dd",
+    "id": "381ae642-6047-4598-a150-3af801afba3f",
     "name": "Bonus",
     "kind": "income",
     "isEssential": false,
@@ -144,7 +144,7 @@
     "isCustom": false
   },
   {
-    "id": "bed94310-8921-4024-8374-d8822133a7f0",
+    "id": "f30f172a-26b7-4ef4-b68c-835b4c04e674",
     "name": "Business",
     "kind": "income",
     "isEssential": false,
@@ -152,7 +152,7 @@
     "isCustom": false
   },
   {
-    "id": "f36f0cd2-2cb3-4bcb-86f0-fd5b3ea533dc",
+    "id": "403834b6-1136-4dc5-8e56-8f093daf091d",
     "name": "Freelance",
     "kind": "income",
     "isEssential": false,
@@ -160,7 +160,7 @@
     "isCustom": false
   },
   {
-    "id": "f5b9c360-761e-4ea5-b209-567aafd4249a",
+    "id": "85190908-0968-41b6-9387-6f6b23177972",
     "name": "Gifts",
     "kind": "income",
     "isEssential": false,
@@ -168,7 +168,7 @@
     "isCustom": false
   },
   {
-    "id": "119a6871-654c-4caa-853f-ba84dd2d46a4",
+    "id": "2feb6083-45cb-41ee-a9eb-eb8e6c40e6be",
     "name": "Interest",
     "kind": "income",
     "isEssential": false,
@@ -176,7 +176,7 @@
     "isCustom": false
   },
   {
-    "id": "b311b207-4c32-4727-9001-0240ef239bb7",
+    "id": "ccb0e570-90a3-4f74-8d7d-10c3daccb649",
     "name": "Other income",
     "kind": "income",
     "isEssential": false,
@@ -184,7 +184,7 @@
     "isCustom": false
   },
   {
-    "id": "e48e107e-43af-4da6-84c0-088265532863",
+    "id": "5fe182ed-2395-408e-b4d9-eb4b61be1103",
     "name": "Salary",
     "kind": "income",
     "isEssential": false,

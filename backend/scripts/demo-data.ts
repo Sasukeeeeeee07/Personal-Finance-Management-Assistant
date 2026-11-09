@@ -110,7 +110,13 @@ async function main() {
       'transaction_detail.json': await call('GET', `/transactions/${expense.id}`),
       'accounts.json': await call('GET', '/accounts?includeArchived=true'),
       'categories.json': cats,
+      'commitments.json': await call('GET', '/commitments'),
+      'reservations_active.json': await call('GET', '/reservations?status=active'),
+      'goals.json': await call('GET', '/goals'),
+      'report_monthly.json': await call('GET', '/reports/monthly'),
     };
+    const goals = dump['goals.json'] as any[];
+    dump['goal_detail.json'] = await call('GET', `/goals/${goals[0].id}`);
     // An empty account, for empty states.
     token = (await call('POST', '/auth/register', { fullName: 'New User', email: `empty-${Date.now()}@example.test`, password: `Demo-${Math.random().toString(36).slice(2)}-1` })).accessToken;
     dump['dashboard_summary_empty.json'] = await call('GET', '/dashboard/summary');

@@ -1,0 +1,96 @@
+{
+  "month": "2026-11",
+  "periodStart": "2026-11-01",
+  "periodEnd": "2026-12-01",
+  "currency": "INR",
+  "income": "68000.00",
+  "expenses": "8460.00",
+  "net": "59540.00",
+  "savingsRatePercent": "87.56",
+  "expenseCount": 7,
+  "essential": "310.00",
+  "nonEssential": "8150.00",
+  "planned": "0.00",
+  "unplanned": "8460.00",
+  "expensesByCategory": [
+    {
+      "categoryId": "587ba5d6-403e-4f1c-bfda-744167a5dfa4",
+      "name": "Food",
+      "total": "4670.00",
+      "sharePercent": "55.20",
+      "count": 5
+    },
+    {
+      "categoryId": "b16eae19-6171-438f-a7b1-e2cb3cf880c9",
+      "name": "Shopping",
+      "total": "3480.00",
+      "sharePercent": "41.13",
+      "count": 1
+    },
+    {
+      "categoryId": "75414497-b01f-49a6-bb9e-dd2a4226cd8f",
+      "name": "Transportation",
+      "total": "310.00",
+      "sharePercent": "3.66",
+      "count": 1
+    }
+  ],
+  "incomeByCategory": [
+    {
+      "categoryId": "5fe182ed-2395-408e-b4d9-eb4b61be1103",
+      "name": "Salary",
+      "total": "68000.00",
+      "sharePercent": "100.00",
+      "count": 1
+    }
+  ],
+  "largestExpenses": [
+    {
+      "id": "f83e52ef-05b8-41d2-885a-d30ecdc0e52b",
+      "amount": "3480.00",
+      "label": "Myntra",
+      "category": "Shopping",
+      "occurredAt": "2026-11-05T07:45:00.000Z"
+    },
+    {
+      "id": "7c264607-bce7-4a34-9035-5cd0ffdd4003",
+      "amount": "1640.00",
+      "label": "Third Wave Coffee",
+      "category": "Food",
+      "occurredAt": "2026-11-08T07:45:00.000Z"
+    },
+    {
+      "id": "3f67e91f-d9d9-49f6-8e37-1ed93092b872",
+      "amount": "1240.00",
+      "label": "Barbeque Nation",
+      "category": "Food",
+      "occurredAt": "2026-11-04T07:45:00.000Z"
+    },
+    {
+      "id": "69605963-c159-4c50-b161-241ce3b3da8b",
+      "amount": "890.00",
+      "label": "Swiggy",
+      "category": "Food",
+      "occurredAt": "2026-11-06T07:45:00.000Z"
+    },
+    {
+      "id": "2d9b120d-9c4e-4706-b6e0-c78a49d69109",
+      "amount": "650.00",
+      "label": "Zomato",
+      "category": "Food",
+      "occurredAt": "2026-11-03T07:45:00.000Z"
+    }
+  ],
+  "previousMonth": {
+    "month": "2026-10",
+    "income": "68000.00",
+    "expenses": "5079.00",
+    "incomeChange": "0.00",
+    "expensesChange": "3381.00"
+  },
+  "notes": [
+    "Only confirmed income and expenses are counted. Transfers between your own accounts, and credit card bill payments, are not.",
+    "Savings rate is (income − expenses) ÷ income, shown as 0% when you spent more than you earned.",
+    "Months follow India time."
+  ]
+}

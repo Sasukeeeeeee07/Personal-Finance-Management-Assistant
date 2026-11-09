@@ -1,6 +1,6 @@
 [
   {
-    "id": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+    "id": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
     "name": "HDFC Savings",
     "type": "savings",
     "institutionName": "HDFC Bank",
@@ -10,14 +10,14 @@
     "isLiability": false,
     "creditLimit": null,
     "openingDate": null,
-    "trackingStartDate": "2026-07-11",
+    "trackingStartDate": "2026-07-12",
     "archived": false,
     "balance": "169110.00",
     "outstanding": null,
     "availableCredit": null
   },
   {
-    "id": "3d6e8a53-49b2-46f7-8d21-00b707a39ec5",
+    "id": "2e7bd351-55ab-474a-bac7-051e78d3f894",
     "name": "Paytm Wallet",
     "type": "wallet",
     "institutionName": null,
@@ -27,14 +27,14 @@
     "isLiability": false,
     "creditLimit": null,
     "openingDate": null,
-    "trackingStartDate": "2026-07-11",
+    "trackingStartDate": "2026-07-12",
     "archived": false,
     "balance": "2000.00",
     "outstanding": null,
     "availableCredit": null
   },
   {
-    "id": "6a722769-07e0-42d2-865f-51e8d8f5a23d",
+    "id": "dfbff03c-3dbf-4472-9b25-01f473de8b01",
     "name": "ICICI Amazon Pay",
     "type": "credit_card",
     "institutionName": null,
@@ -44,14 +44,14 @@
     "isLiability": true,
     "creditLimit": "80000.00",
     "openingDate": null,
-    "trackingStartDate": "2026-07-11",
+    "trackingStartDate": "2026-07-12",
     "archived": false,
     "balance": "-5369.00",
     "outstanding": "5369.00",
     "availableCredit": "74631.00"
   },
   {
-    "id": "ee3626fa-f8e4-40b1-8cb2-a6b1b92e4bbe",
+    "id": "79937c87-60ab-4ebe-bd36-d5eccf5ccd91",
     "name": "SBI Fixed Deposit",
     "type": "fixed_deposit",
     "institutionName": null,
@@ -61,7 +61,7 @@
     "isLiability": false,
     "creditLimit": null,
     "openingDate": "2024-04-01",
-    "trackingStartDate": "2026-07-11",
+    "trackingStartDate": "2026-07-12",
     "archived": false,
     "balance": "150000.00",
     "outstanding": null,

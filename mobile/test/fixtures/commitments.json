@@ -1,0 +1,54 @@
+[
+  {
+    "id": "463dde97-be50-40c5-b006-09947a3f6f5a",
+    "name": "Airtel Fiber",
+    "amount": "999.00",
+    "currency": "INR",
+    "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
+    "categoryId": "25a0a88f-18bb-4988-a94c-512679128cc1",
+    "frequency": "monthly",
+    "intervalCount": 1,
+    "nextDueDate": "2026-11-07",
+    "reminderDaysBefore": 3,
+    "status": "active"
+  },
+  {
+    "id": "8409c12a-e073-448f-b89e-853028ebdbaf",
+    "name": "Electricity",
+    "amount": "1400.00",
+    "currency": "INR",
+    "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
+    "categoryId": "a9d92708-660a-44ee-b9a6-adc559d2456b",
+    "frequency": "monthly",
+    "intervalCount": 1,
+    "nextDueDate": "2026-11-13",
+    "reminderDaysBefore": 3,
+    "status": "active"
+  },
+  {
+    "id": "b90a4f2d-7c83-4192-a610-ef8962175835",
+    "name": "Rent",
+    "amount": "18000.00",
+    "currency": "INR",
+    "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
+    "categoryId": "e4ed6751-0572-47ed-9cf6-de24396234e5",
+    "frequency": "monthly",
+    "intervalCount": 1,
+    "nextDueDate": "2026-11-21",
+    "reminderDaysBefore": 3,
+    "status": "active"
+  },
+  {
+    "id": "2ab91042-14d3-431e-beb3-66f080306fff",
+    "name": "Car EMI",
+    "amount": "9500.00",
+    "currency": "INR",
+    "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
+    "categoryId": "9effe40d-7a90-448d-90b1-fb8dc2cbda8a",
+    "frequency": "monthly",
+    "intervalCount": 1,
+    "nextDueDate": "2026-11-27",
+    "reminderDaysBefore": 3,
+    "status": "active"
+  }
+]

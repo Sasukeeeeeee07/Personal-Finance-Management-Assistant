@@ -126,7 +126,7 @@ void main() {
     // Put the fixture detail first in the recent list so it is the one tapped.
     final list = fixtureMap('transactions_recent.json');
     final items = (list['items'] as List).cast<Map<String, dynamic>>();
-    backend.responses['/transactions'] = (
+    backend.responses['GET /transactions'] = (
       200,
       {
         ...list,

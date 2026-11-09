@@ -1,9 +1,9 @@
 {
   "methodVersion": "forecast-v2",
-  "asOf": "2026-11-08",
-  "calculatedAt": "2026-11-08T08:46:04.745Z",
+  "asOf": "2026-11-09",
+  "calculatedAt": "2026-11-09T13:01:44.255Z",
   "monthEnd": "2026-11-30",
-  "daysLeft": 22,
+  "daysLeft": 21,
   "currency": "INR",
   "startingLiquidBalance": "171110.00",
   "expectedIncome": {
@@ -16,22 +16,22 @@
       {
         "name": "Airtel Fiber",
         "amount": "999.00",
-        "date": "2026-11-08"
+        "date": "2026-11-09"
       },
       {
         "name": "Electricity",
         "amount": "1400.00",
-        "date": "2026-11-12"
+        "date": "2026-11-13"
       },
       {
         "name": "Rent",
         "amount": "18000.00",
-        "date": "2026-11-20"
+        "date": "2026-11-21"
       },
       {
         "name": "Car EMI",
         "amount": "9500.00",
-        "date": "2026-11-26"
+        "date": "2026-11-27"
       }
     ]
   },
@@ -41,12 +41,12 @@
       {
         "name": "Netflix",
         "amount": "649.00",
-        "date": "2026-11-09"
+        "date": "2026-11-10"
       }
     ]
   },
   "variableSpending": {
-    "total": "14640.56",
+    "total": "13975.08",
     "dailyAverage": "665.48",
     "method": "weighted_recent",
     "historyDays": 40,
@@ -74,15 +74,15 @@
       }
     ]
   },
-  "estimatedMonthEndBalance": "125921.44",
-  "estimatedAvailableAtMonthEnd": "101921.44",
+  "estimatedMonthEndBalance": "126586.92",
+  "estimatedAvailableAtMonthEnd": "102586.92",
   "availableNow": "121711.00",
-  "availableChangeByMonthEnd": "-19789.56",
+  "availableChangeByMonthEnd": "-19124.08",
   "shortfallRisk": false,
   "confidence": "medium",
   "formula": "startingLiquidBalance + expectedIncome − scheduledPayments − expectedRecurringExpenses − variableSpending",
   "assumptions": [
-    "Starting balance is your liquid balance at the end of 2026-11-08 (savings, current, cash, UPI-linked and wallet accounts). Fixed deposits and credit cards are not included.",
+    "Starting balance is your liquid balance at the end of 2026-11-09 (savings, current, cash, UPI-linked and wallet accounts). Fixed deposits and credit cards are not included.",
     "Every reservation that was open on that date and falls due this month is paid in full on its due date; overdue ones are assumed paid on the forecast date.",
     "Recurring income and expenses are items you marked as recurring last month that have not occurred yet this month. They are expected on the same day of the month.",
     "Recurring expenses that match a commitment are counted once, as scheduled payments.",

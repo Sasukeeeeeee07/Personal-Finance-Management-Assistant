@@ -1,0 +1,37 @@
+{
+  "id": "b6c2445e-4245-48e7-954d-d7ea0d76d176",
+  "name": "Emergency fund",
+  "kind": "emergency_fund",
+  "targetAmount": "150000.00",
+  "currency": "INR",
+  "targetDate": null,
+  "monthlyContribution": "8000.00",
+  "priority": 1,
+  "accountId": null,
+  "allocationMode": "reserve",
+  "status": "active",
+  "completedAt": null,
+  "saved": "24000.00",
+  "allocated": "24000.00",
+  "movedByTransfers": "0.00",
+  "remaining": "126000.00",
+  "progressPercent": "16.00",
+  "recommendedMonthly": null,
+  "estimatedCompletionDate": "2028-03-09",
+  "estimateBasis": "planned_monthly_contribution",
+  "onTrack": null,
+  "targetDatePassed": false,
+  "daysToTarget": null,
+  "contributions": [
+    {
+      "id": "4f3676be-2a3b-41b7-b031-2de208b5813b",
+      "amount": "24000.00",
+      "type": "contribution",
+      "date": "2026-11-09",
+      "note": null,
+      "transactionId": null,
+      "reversesContributionId": null,
+      "reversed": false
+    }
+  ]
+}

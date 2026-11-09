@@ -1,5 +1,5 @@
 {
-  "asOf": "2026-11-08",
+  "asOf": "2026-11-09",
   "currency": "INR",
   "totalBalance": "321110.00",
   "netPosition": "315741.00",
@@ -15,48 +15,48 @@
   "needsReviewCount": 0,
   "savings": "30000.00",
   "monthlyBudget": {
-    "budgetId": "89fcfd5d-fd84-41f8-b467-c318a7756f78",
+    "budgetId": "ea8ee5c0-c4c6-49fb-9433-da05ca8303f8",
     "limit": "40000.00",
     "spent": "8460.00",
     "remaining": "31540.00",
     "utilizationPercent": "21.15",
-    "dailyTarget": "1371.30"
+    "dailyTarget": "1433.63"
   },
   "upcomingPayments": [
     {
-      "reservationId": "b90e7fff-93d1-408a-bf1b-1091022e3667",
+      "reservationId": "e562dd22-aeba-455c-86af-20a5924aa890",
       "name": "Airtel Fiber",
       "amount": "999.00",
       "reserved": "999.00",
-      "dueDate": "2026-11-06",
-      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "dueDate": "2026-11-07",
+      "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
       "overdue": true
     },
     {
-      "reservationId": "af2db2eb-2dcb-43eb-8d28-e402cbfc8d06",
+      "reservationId": "0ac8d8c5-8369-456e-ba3d-58c4b7b533c3",
       "name": "Electricity",
       "amount": "1400.00",
       "reserved": "1400.00",
-      "dueDate": "2026-11-12",
-      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "dueDate": "2026-11-13",
+      "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
       "overdue": false
     },
     {
-      "reservationId": "a2a2dd14-8166-45e2-be06-94221a78115a",
+      "reservationId": "b2ee077c-0eb1-41ff-9671-3d70661738c6",
       "name": "Rent",
       "amount": "18000.00",
       "reserved": "18000.00",
-      "dueDate": "2026-11-20",
-      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "dueDate": "2026-11-21",
+      "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
       "overdue": false
     },
     {
-      "reservationId": "c4f04ac6-9f5b-49d9-9e92-b2d4afa86024",
+      "reservationId": "4c782303-0048-4fec-bd20-89d997130262",
       "name": "Car EMI",
       "amount": "9500.00",
       "reserved": "5000.00",
-      "dueDate": "2026-11-26",
-      "accountId": "8ffc321a-574b-4302-a60b-03f4f7d42ba8",
+      "dueDate": "2026-11-27",
+      "accountId": "a5dfd069-27d7-452b-9f73-b71a1b2c7a55",
       "overdue": false
     }
   ],

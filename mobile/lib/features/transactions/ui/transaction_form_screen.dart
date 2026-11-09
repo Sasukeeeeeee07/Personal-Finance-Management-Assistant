@@ -164,6 +164,8 @@ class _TransactionFormScreenState extends ConsumerState<TransactionFormScreen> {
     } on ApiError catch (e) {
       if (!mounted) return;
       if (e.code == 'reservation_amount_mismatch') {
+        // Stop the busy spinner while the person decides.
+        setState(() => _busy = false);
         final ok = await confirmAction(
           context,
           title: 'Different amount',

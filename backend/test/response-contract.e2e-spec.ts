@@ -132,6 +132,11 @@ describe('Response contract (frozen OpenAPI)', () => {
       'transaction_detail.json': '/api/v1/transactions/{id}',
       'accounts.json': '/api/v1/accounts',
       'categories.json': '/api/v1/categories',
+      'commitments.json': '/api/v1/commitments',
+      'reservations_active.json': '/api/v1/reservations',
+      'goals.json': '/api/v1/goals',
+      'goal_detail.json': '/api/v1/goals/{id}',
+      'report_monthly.json': '/api/v1/reports/monthly',
     };
     for (const [file, path] of Object.entries(map)) validate(path, JSON.parse(readFileSync(join(dir, file), 'utf8')));
   });
