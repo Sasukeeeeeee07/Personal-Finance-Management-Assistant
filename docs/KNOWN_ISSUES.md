@@ -6,12 +6,12 @@ Severity: **High** (wrong numbers or security exposure possible), **Medium** (in
 
 | ID | Severity | Area | Issue | Plan |
 |---|---|---|---|---|
-| KI-001 | Medium | Validation | GitHub remote now exists and CI is configured, but no GitHub Actions run has completed yet. Real Postgres is validated on 17.11 locally only. | Push the `ci/github-actions` branch and check the run. |
-| KI-002 | Medium | Email | Mailer only logs messages; no delivery, retry or queue. | Priority 5 (SMTP + BullMQ, outbox D-021). |
+| KI-001 | Low | Validation | CI is green on `main` (incl. PostgreSQL 16), but `feature/mvp-completion` has not been pushed, so its CI run is NOT VERIFIED. Local real-Postgres runs use 17.11. | Push the branch and check the run before merging. |
+| KI-002 | Low | Email | SMTP delivery implemented (nodemailer, 2 background retries, masked logs) but **not verified against a real SMTP server**. No durable queue: a message is lost if the instance restarts mid-retry. Without SMTP settings, reset/verify emails are not sent. | Configure SMTP and send a test reset; a queue is not needed for personal use. |
 | KI-003 | Medium | Auth | Google Sign-In untested with real Google tokens; not wired in the Flutter app yet. | Needs OAuth client IDs. |
 | KI-004 | Medium | Security | No Postgres row-level security; isolation relies on owner filtering (covered by tests). | Evaluated in D-022; Priority 8 behind a flag. |
-| KI-016 | Low | API contract | Response schemas exist for the 10 dashboard endpoints (enforced by tests); reservations, commitments, goals and write endpoints are still undocumented. | Add with each Flutter module. |
-| KI-017 | Medium | Mobile | Not yet run on an Android emulator/device or iOS; validated on Flutter web and with widget/integration tests. | Run on emulator once Android cmdline-tools are installed; iOS needs macOS. |
+| KI-016 | Low | API contract | Response schemas cover the dashboard endpoints plus reports, commitments, reservations and goals (enforced by the response contract test). Write-endpoint responses (POST/PATCH bodies) and budgets/accounts detail are still not schema-tested. | Add when those screens next change. |
+| KI-017 | Low | Mobile | Not run on an Android emulator/device or iOS. The deployment target is the web app, verified in Chrome. | Optional: install Android cmdline-tools. |
 | KI-018 | Medium | Mobile | No biometric unlock yet (optional in spec). | Add with `local_auth` in the profile/settings module. |
 | KI-021 | Low | Tooling | Incremental `flutter build apk` fails on this machine because the project path contains spaces (`Failed to create parent directory 'C:\Users\win'`); a clean build (`flutter clean`) succeeds. CI paths have no spaces. | Move the project to a path without spaces, or keep using clean builds locally. |
 | KI-022 | Low | Mobile | Dashboard figures are kept in memory only; after a cold start while offline the app shows the offline screen instead of last-known figures. | Decide whether to persist an encrypted snapshot (HANDOFF-004 question 4). |
@@ -26,6 +26,12 @@ Severity: **High** (wrong numbers or security exposure possible), **Medium** (in
 | KI-015 | Low | Tooling | Jest needs `--experimental-vm-modules` for PGlite. | Baked into `npm test`. |
 | KI-019 | Low | Accounts | `tracking_start_date` cannot be changed after creation. | Re-basing flow (new opening balance at the new date) if users need it. |
 | KI-020 | Low | Forecast | Recurring-vs-commitment de-duplication matches on category or exact name; a differently named commitment for the same bill could still double-count. | Link transactions to commitments explicitly when ingestion lands. |
+| KI-024 | Medium | Mobile | No offline entry queue: adding a transaction while offline fails with a clear message and nothing is saved locally. Nothing pending ever affects balances (there is no pending state on the client). | Persist unsent requests with their idempotency keys and replay on reconnect. |
+| KI-025 | Medium | Profile | No way to change your name or password while signed in (no API endpoint, no screen). Password change today = "forgot password", which needs SMTP. | `PATCH /auth/me`, `POST /auth/change-password` (revoke other sessions) + Profile screens. |
+| KI-026 | Low | Hosting | Render free instances sleep after ~15 min idle; the first request then waits ~30–60 s. The web build uses `API_TIMEOUT_SECONDS=75` so it doesn't fail. | Accept for personal use (₹0). |
+| KI-027 | Low | Web | GoRouter `push` navigations (details, forms) don't change the browser address bar, so refreshing on a detail page returns to the list it was opened from. Tab pages and deep links work. | Consider `GoRouter.optionURLReflectsImperativeAPIs` after checking back-button behaviour. |
+| KI-028 | Low | Web | No Content-Security-Policy header on Vercel (Flutter's CanvasKit loader needs wasm and gstatic). Other security headers are set. | Add a tested CSP later. |
+| KI-029 | Low | Repo | `neon.ts`, a root `package.json` and root `package-lock.json` (from the Neon CLI's `neon init`) were committed in 51c2bb6. They contain no secrets and aren't used by the app. | Owner to keep or remove. |
 
 ## Resolved in the review gate (2026-11-08)
 

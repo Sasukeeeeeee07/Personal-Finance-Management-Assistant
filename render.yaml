@@ -1,0 +1,42 @@
+# Render Blueprint for the NestJS API (free instance, ₹0/month).
+# Render → New → Blueprint → pick this repo. Values marked `sync: false` are asked for in the
+# dashboard and are never stored in Git. See docs/DEPLOYMENT.md.
+services:
+  - type: web
+    name: pfm-api
+    runtime: node
+    plan: free
+    region: singapore # closest free region to India; must match the Neon region as closely as possible
+    rootDir: backend
+    # --include=dev: TypeScript is a dev dependency and NODE_ENV=production would otherwise skip it.
+    buildCommand: npm ci --include=dev && npm run build
+    # Migrations run automatically at start-up (serialised with an advisory lock).
+    startCommand: node dist/main.js
+    # Liveness only (no database query) so Neon can still autosuspend when the app is idle.
+    healthCheckPath: /api/v1/health
+    autoDeploy: false # deploy deliberately: Manual Deploy → Deploy latest commit
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # Neon pooled connection string, with ?sslmode=require
+      - key: CORS_ORIGINS
+        sync: false # e.g. https://your-app.vercel.app (comma-separated, https only)
+      - key: APP_WEB_URL
+        sync: false # e.g. https://your-app.vercel.app (used in password-reset / verify-email links)
+      - key: SMTP_HOST
+        sync: false # optional; leave empty to disable email (links are then not sent)
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: SMTP_FROM
+        sync: false

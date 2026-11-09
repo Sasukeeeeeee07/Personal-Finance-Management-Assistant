@@ -4,6 +4,95 @@ Newest entry first. Each entry is self-contained: a reviewer should not need to 
 
 ---
 
+## HANDOFF-005 · MVP completion + ₹0 free-tier deployment prep
+**Date:** 2026-11-09 · **Branch:** `feature/mvp-completion` (from `main`, not pushed, not merged) · **Implementer:** Claude · **Status:** awaiting owner review
+
+### Direction change during this step
+The owner set the project to **personal use only**: no subscriptions, payment gateways, SaaS billing, commercial
+onboarding, tenant management or org administration. Hosting: **Vercel Hobby + Render Free + Neon Free, ₹0/month**.
+The earlier OCI / Docker ARM64 request is superseded. Authentication and data security are kept, and the
+architecture is unchanged.
+
+### 1. What was built
+| Module | Status |
+|---|---|
+| Transactions + quick add (list, filters, paging, add/edit/delete, idempotent retries) | COMPLETE |
+| Accounts + transfers + card bill payment | COMPLETE |
+| Money Lock UI (add, mark paid atomically, adjust, release, cancel) | COMPLETE |
+| Budgets | COMPLETE |
+| Goals (track-only / set-aside, contributions, withdraw, reverse, reached, archive) | COMPLETE |
+| Reports (`GET /reports/monthly` + screen) | COMPLETE |
+| Profile + settings | PARTIALLY COMPLETE: no name/password editing (KI-025), no biometric lock (KI-018) |
+| Auth end to end (incl. reset/verify links, restore after refresh) | COMPLETE for email/password; Google NOT STARTED |
+| Deployment files + guide | COMPLETE; real deployment NOT STARTED |
+
+### 2. Files (main ones)
+- Backend:
+  - `src/reports/reports.service.ts` (new);
+  - `src/config/env.ts` (production validation, SMTP, API docs flag, trust proxy);
+  - `src/main.ts`, `src/app.setup.ts`, `src/app.module.ts` (`/health/ready`);
+  - `src/auth/mailer.service.ts` (nodemailer);
+  - `src/database/connection.ts` (Neon-friendly pool timeouts);
+  - `src/database/migrator.ts` (advisory lock);
+  - `src/api-responses.ts`;
+  - `.env.example`.
+- Flutter:
+  - `lib/features/finance/*` (models, API, providers);
+  - screens in `transactions/`, `accounts/`, `plan/`, `goals/`, `reports/`, `auth/ui/link_screens.dart`;
+  - `lib/shared/forms.dart` (form helpers, `leave`/`backTo`, `ReadableWidth`);
+  - `lib/core/router/router.dart` (5 tabs, deep-link restore);
+  - `lib/core/config/app_config.dart` (`API_TIMEOUT_SECONDS`);
+  - `web/vercel.json`.
+- Repo: `render.yaml`, `docs/DEPLOYMENT.md`.
+- Tests: `backend/test/mvp-backend.e2e-spec.ts`, `migrations.e2e-spec.ts` (concurrency), `response-contract.e2e-spec.ts`; `mobile/test/features/mvp_modules_test.dart`, `test/core/fake_backend.dart`, regenerated fixtures.
+
+### 3. Database migrations
+None added. `migrate()` now takes `pg_advisory_xact_lock` around table creation, each migration (re-checked under the
+lock) and reference seeding, so overlapping instances during a Render deploy can't apply a migration twice.
+
+### 4. API changes (contract re-frozen in `docs/api/openapi-v1.json`)
+- `GET /reports/monthly?month=YYYY-MM` (owner-scoped; a future month gives 422 `report_future_month`).
+- `GET /health/ready` (DB check; 503 `database_unavailable`).
+- Response schemas added for commitments, reservations, goals, goal detail and the monthly report.
+- Production: Swagger off unless `ENABLE_API_DOCS=true`; CORS allow-list must be https.
+
+### 5. Tests executed (details in TEST_REPORT.md, 2026-11-09)
+- Backend: 124/124 on PGlite and on real PostgreSQL 17.11.
+- Flutter: analyze clean; 50 passed / 3 skipped.
+- Production start-up checks: passed.
+- Web release build: OK.
+- Chrome walkthrough at 375×812 and 1280×800: every figure correct.
+- CI for this branch: NOT VERIFIED.
+
+### 6. Builds
+- Flutter web release: **OK**.
+- Docker ARM64: **not applicable** (OCI dropped; nothing built).
+- Android APK: not rebuilt in this step.
+
+### 7. Bugs found and fixed in this step
+- The fake backend couldn't tell GET from POST on the same path, which hid a dashboard test override.
+- A spinner stayed behind the reservation-mismatch dialog.
+- Forms couldn't close after a deep link or refresh.
+- The "Transactions" tab label wrapped at 375 px.
+- Pay card bill didn't preselect the card.
+- Forms floated mid-screen.
+- Goal and account detail had no retry.
+- Desktop lists were over-wide.
+- Production CORS test fixture lacked `APP_WEB_URL`.
+- An empty `SMTP_PORT` parsed as 0.
+
+### 8. Outstanding
+KI-024 (offline queue), KI-025 (profile editing), KI-026 (Render cold start), KI-027 (address bar on pushed pages),
+KI-028 (CSP), KI-029 (Neon CLI files at repo root), KI-002 (SMTP unverified).
+
+### 9. Decisions for review
+1. The Render health check uses `/health` (no DB) so Neon can autosuspend. `/health/ready` is for manual checks.
+2. Migrations run on application start rather than as a separate step (Render free has no pre-deploy job), made safe by the advisory lock.
+3. The web app is built locally and uploaded with `vercel deploy build/web --prod`, because Vercel's build image has no Flutter.
+4. `autoDeploy: false` on Render, so the owner deploys deliberately.
+
+---
+
 ## HANDOFF-004 · Flutter step 2 — Dashboard
 **Date:** 2026-11-08 · **Branch:** `feature/flutter-dashboard` · **Implementer:** Claude · **Status:** awaiting review (Transactions module not started, as instructed)
 

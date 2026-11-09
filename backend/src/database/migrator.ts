@@ -42,21 +42,33 @@ export const SYSTEM_CATEGORIES: { name: string; kind: 'income' | 'expense'; esse
   { name: 'Miscellaneous', kind: 'expense', essential: false },
 ];
 
+/** Arbitrary constant identifying this app's migration lock (pg_advisory_xact_lock takes a bigint). */
+const MIGRATION_LOCK_KEY = 7_420_115_001;
+
 export async function migrate(db: DB, log: (msg: string) => void = () => {}): Promise<void> {
   // Names, notes and merchants are user text (₹, Hindi, emoji); a non-UTF-8 database would corrupt or reject them.
   const enc = await sql<{ server_encoding: string }>`SHOW server_encoding`.execute(db);
   if (enc.rows[0]?.server_encoding?.toUpperCase() !== 'UTF8') {
     throw new Error(`Database encoding is ${enc.rows[0]?.server_encoding}; UTF8 is required. Create the database with ENCODING 'UTF8'.`);
   }
-  await sql`CREATE TABLE IF NOT EXISTS _migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`.execute(db);
+  await db.transaction().execute(async (trx) => {
+    // Concurrent CREATE TABLE IF NOT EXISTS can still collide, so take the same lock.
+    await sql`SELECT pg_advisory_xact_lock(${MIGRATION_LOCK_KEY})`.execute(trx);
+    await sql`CREATE TABLE IF NOT EXISTS _migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`.execute(trx);
+  });
   const applied = new Set((await db.selectFrom('_migrations').select('name').execute()).map((r) => r.name));
   for (const m of MIGRATIONS) {
     if (applied.has(m.name)) continue;
-    await db.transaction().execute(async (trx) => {
+    const ran = await db.transaction().execute(async (trx) => {
+      // Two instances can boot at once (e.g. Render's zero-downtime deploy). Serialise, then re-check.
+      await sql`SELECT pg_advisory_xact_lock(${MIGRATION_LOCK_KEY})`.execute(trx);
+      const done = await trx.selectFrom('_migrations').select('name').where('name', '=', m.name).executeTakeFirst();
+      if (done) return false;
       for (const statement of statements(m.up)) await sql.raw(statement).execute(trx);
       await trx.insertInto('_migrations').values({ name: m.name }).execute();
+      return true;
     });
-    log(`Applied migration ${m.name}`);
+    if (ran) log(`Applied migration ${m.name}`);
   }
   await seedReferenceData(db);
 }
@@ -78,6 +90,7 @@ export async function rollbackLast(db: DB, log: (msg: string) => void = () => {}
 /** Idempotent seed of roles, permissions and system categories. Contains no user data. */
 export async function seedReferenceData(db: DB): Promise<void> {
   await db.transaction().execute(async (trx) => {
+    await sql`SELECT pg_advisory_xact_lock(${MIGRATION_LOCK_KEY})`.execute(trx);
     for (const [key, description] of Object.entries(PERMISSION_DESCRIPTIONS)) {
       await trx
         .insertInto('permissions')

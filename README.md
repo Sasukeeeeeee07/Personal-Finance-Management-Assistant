@@ -35,3 +35,7 @@ Production refuses to start without `DATABASE_URL` and a JWT secret of at least 
 - Balances = opening balance + append-only ledger entries. Only confirmed transactions count.
 - Transfers between your own accounts are never income or expenses. A credit card bill payment is a transfer.
 - Reservations are plans inside the app. They lower available-to-spend but never block money at the bank.
+
+## Deployment
+
+Personal use, ₹0/month: Flutter web on Vercel Hobby, API on Render Free, PostgreSQL on Neon Free. Step-by-step guide, backups and rollback: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).

@@ -11,7 +11,8 @@ final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.fromEnvironment
 final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient(baseUrl: ref.watch(appConfigProvider).apiBaseUrl, tokens: ref.watch(tokenStoreProvider));
+  final config = ref.watch(appConfigProvider);
+  final client = ApiClient(baseUrl: config.apiBaseUrl, tokens: ref.watch(tokenStoreProvider), receiveTimeout: config.receiveTimeout);
   // A rejected refresh means the session ended elsewhere (logout, password reset, token reuse).
   client.onSessionExpired = () => ref.read(authControllerProvider.notifier).sessionExpired();
   return client;

@@ -65,7 +65,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     if (!env.SMTP_FROM) problems.push('SMTP_FROM is required when SMTP_HOST is set');
     smtp = {
       host: env.SMTP_HOST,
-      port: Number(env.SMTP_PORT ?? 587),
+      port: Number(env.SMTP_PORT || 587),
       secure: env.SMTP_SECURE === 'true',
       user: env.SMTP_USER || undefined,
       password: env.SMTP_PASSWORD || undefined,

@@ -6,7 +6,6 @@ Core philosophy: **Allocate first. Spend second.**
 
 ```
 /backend   NestJS 11 + TypeScript, Kysely (typed SQL), PostgreSQL
-/web       Next.js 15 (App Router) + TypeScript + Tailwind
 /mobile    Flutter 3.35 + Riverpod + GoRouter + Material 3
 /docs      Plan, progress, architecture decisions, API notes
 docker-compose.yml   Postgres 16 + Redis 7 for local/prod-like runs
@@ -57,18 +56,26 @@ Fixed deposits are not liquid. Credit card dues are shown as a separate liabilit
 
 Never: unofficial Google Pay APIs, screen scraping, UPI PINs, OTPs, card CVVs, bank passwords, automated payments.
 
-## 4. Execution order (approved 2026-11-08)
+## 4. Execution order
+
+**Revised 2026-11-09: personal use only, ₹0/month hosting** (Vercel Hobby · Render Free · Neon Free; see
+[DEPLOYMENT.md](DEPLOYMENT.md)). Subscriptions, payment gateways, SaaS billing, commercial onboarding, tenant management
+and advanced organization administration are **out of scope**. Authentication and financial data security stay.
+The OCI / Docker ARM64 plan is dropped. The existing PostgreSQL + NestJS + Flutter architecture is unchanged.
+The Next.js dashboard is dropped: the Flutter web build is the web app.
 
 | Priority | Scope | Status |
 |---|---|---|
-| 1 | Phase 3: budgets, goals, forecast, test #11 | ✅ Done (HANDOFF-002) |
-| 2 | Real PostgreSQL validation in CI | ⚠️ Passed locally on PG 17.11; CI (PG 16) waits for a Git remote |
-| 3 | Flutter MVP (Android first, iOS compatible) | Next |
-| 4 | Next.js dashboard | |
-| 5 | SMTP email + Firebase notifications (BullMQ + Redis) | |
-| 6 | Transaction automation (adapters, statement import, Android SMS/notifications) | |
-| 7 | Deterministic insights, discipline score, optional Ollama coach | |
-| 8 | SaaS plans, billing abstraction, Super Admin, production hardening | |
+| 1 | Phase 3: budgets, goals, forecast | ✅ COMPLETE |
+| 2 | Real PostgreSQL validation in CI | ✅ COMPLETE on `main` (PostgreSQL 16); this branch NOT VERIFIED until pushed |
+| 3 | Flutter MVP: transactions, accounts, Money Lock, budgets, goals, reports, auth | ✅ COMPLETE (profile editing PARTIALLY COMPLETE, KI-025) |
+| 3a | Free-tier deployment prep (render.yaml, vercel.json, env example, DEPLOYMENT.md) | ✅ COMPLETE; actual deployment NOT STARTED (owner's accounts) |
+| 4 | Profile editing + change password (API + screens) | Next |
+| 5 | Offline entry queue (KI-024) | |
+| 6 | Email via SMTP free tier (code done; needs a real SMTP check) | |
+| 7 | Transaction automation for personal use (statement import first) | |
+| 8 | Deterministic insights; optional local AI coach (must work without a paid key) | |
+| — | ~~Next.js dashboard~~, ~~SaaS plans / billing / Super Admin~~, ~~OCI~~ | Dropped |
 
 ### Priority 3 plan — Flutter MVP
 - `mobile/` Flutter app: Riverpod, GoRouter, Material 3, light/dark, `flutter_secure_storage` for tokens.

@@ -36,6 +36,28 @@ describe('Migrations and constraints', () => {
     expect(cats).toHaveLength(24);
   });
 
+  it('is safe when several instances migrate a fresh database at the same time (zero-downtime deploys)', async () => {
+    const url = process.env.TEST_DATABASE_URL;
+    if (!url) {
+      // PGlite has a single connection, so only the call-level overlap can be exercised here.
+      await Promise.all([migrate(db), migrate(db), migrate(db)]);
+      return;
+    }
+    const fresh = `${schema}_c`;
+    await sql.raw(`CREATE SCHEMA ${fresh}`).execute(db);
+    const instances = [1, 2, 3].map(() => createDatabase({ databaseUrl: `${url}${url.includes('?') ? '&' : '?'}options=-c%20search_path%3D${fresh}` }));
+    try {
+      await Promise.all(instances.map((i) => migrate(i)));
+      const names = await instances[0].selectFrom('_migrations').select('name').execute();
+      expect(names).toHaveLength(8);
+      const cats = await instances[0].selectFrom('transaction_categories').select('id').where('owner_id', 'is', null).execute();
+      expect(cats).toHaveLength(24);
+    } finally {
+      await Promise.all(instances.map((i) => i.destroy()));
+      await sql.raw(`DROP SCHEMA ${fresh} CASCADE`).execute(db);
+    }
+  });
+
   it('rolls back every migration added since the baseline and re-applies them', async () => {
     for (const name of ['008_idempotency', '007_account_tracking', '006_goal_allocation', '005_reservation_lifecycle', '004_budgets_goals']) {
       expect(await rollbackLast(db)).toBe(name);

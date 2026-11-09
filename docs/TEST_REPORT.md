@@ -2,6 +2,53 @@
 
 Only runs that were actually executed are recorded here.
 
+## Latest run — 2026-11-09 (MVP completion + free-tier deployment prep, branch `feature/mvp-completion`)
+
+| Environment | Command | Result |
+|---|---|---|
+| Backend · type-check | `npm run lint` | No errors |
+| Backend · PGlite | `npm test` | **124 / 124 passed** (14 suites) |
+| Backend · real PostgreSQL 17.11 (local, UTF-8) | `TEST_DATABASE_URL=… npm test` | **124 / 124 passed** |
+| Backend · build | `npm run build` | OK |
+| Backend · production start (real PostgreSQL 17.11) | `NODE_ENV=production … node dist/main.js` | Migrations applied; `GET /api/v1/health/ready` → 200 `{"status":"ok","database":"ok"}`; `/api/docs` → 404; allowed origin gets `Access-Control-Allow-Origin`, a foreign origin gets none |
+| Backend · production start with no configuration | `NODE_ENV=production node dist/main.js` | Refused to start; listed JWT secret, DATABASE_URL, CORS_ORIGINS and APP_WEB_URL problems |
+| Mobile · format | `dart format lib test --line-length 160` | Clean (last run reformatted 1 file, then committed) |
+| Mobile · analyze | `flutter analyze` | No issues |
+| Mobile · tests | `flutter test` | **50 passed**, 3 skipped (live API tests need `LIVE_API_URL`) |
+| Mobile · web release build | `flutter build web --release --dart-define=API_TIMEOUT_SECONDS=75` | OK; `build/web/vercel.json` present |
+| GitHub Actions for this branch | — | **NOT VERIFIED** (branch not pushed). `main` CI is green, incl. PostgreSQL 16 |
+| Live API integration tests (`test/integration`) | — | **Not run this round** |
+| Real Render / Neon / Vercel deployment | — | **Not done** (by instruction) |
+
+New tests this round:
+- `migrations.e2e-spec.ts`: three instances migrate a fresh schema concurrently (real PostgreSQL), giving 8 migrations and 24 categories exactly once.
+- `mvp_modules_test.dart`: "Pay card bill" sends a transfer to the card with no category.
+- (Earlier in the branch) `mvp-backend.e2e-spec.ts` (reports, health, production config, mailer never logs the body); response contract extended to reports, commitments, reservations and goals; 11 MVP module widget tests.
+
+### Chrome walkthrough (release web build, local backend on PGlite, fresh test account)
+
+At 375×812 unless noted. Each figure was read off the screen and checked against the expected arithmetic.
+
+| Step | Expected | Seen |
+|---|---|---|
+| Register; deep link to `/register`; refresh on `/accounts/new` | Returns to the same page after restore | ✔ (`/loading?from=…` then back) |
+| Add HDFC Savings ₹50,000 + income ₹60,000 | Liquid ₹1,10,000; month income ₹60,000 | ✔ |
+| Money Lock: Rent ₹15,000 monthly | Reserved ₹15,000; available ₹95,000 | ✔ |
+| Mark paid | Balance ₹95,000 (deducted once); next month reserved; available ₹80,000 | ✔ |
+| Overall budget ₹40,000 | "₹15,000 of ₹40,000, ₹25,000 left" | ✔ |
+| Goal "Emergency fund" ₹1,00,000, set-aside, add ₹10,000 | 10%; dashboard available ₹70,000 (95,000 − 15,000 − 10,000) | ✔ |
+| Credit card ICICI, owes ₹5,000 → Pay card bill ₹5,000 from HDFC | Card ₹0 owed; liquid ₹90,000; net position unchanged ₹90,000; spending unchanged ₹15,000 | ✔ (after fix 1) |
+| Reports, November 2026 | Income ₹60,000, spent ₹15,000, left ₹45,000, 75% kept; Rent planned; card payment not counted | ✔ |
+| Dashboard / Budget / Money Lock at 1280×800 | Two-column dashboard; lists at readable width | ✔ (after fix 4) |
+
+Bugs found in the walkthrough and fixed (commit `0e8e3f1`):
+1. "Pay card bill" opened a blank transfer. The card is now preselected as the destination (+ widget test).
+2. Short forms and the goal page floated mid-screen with an empty band under the app bar. Now top-aligned.
+3. Goal detail and account detail had no "Try again" on load errors, and account detail had no back button after a deep link.
+4. Lists stretched to 1,200 px on desktop. Now capped at 760 px.
+
+Screenshots from this walkthrough were reviewed in the browser pane but not saved to `docs/screenshots/`.
+
 ## GitHub Actions CI — configured 2026-11-08, **not yet run**
 
 Workflow: `.github/workflows/ci.yml`, triggered on every push and pull request. Repository: https://github.com/Sasukeeeeeee07/Personal-Finance-Management-Assistant
