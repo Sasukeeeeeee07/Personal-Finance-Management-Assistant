@@ -70,7 +70,7 @@ export function configureApp(app: INestApplication, config: AppConfig) {
   );
   app.useGlobalFilters(new SafeExceptionFilter());
 
-  SwaggerModule.setup('api/docs', app, buildOpenApiDocument(app));
+  if (config.apiDocs) SwaggerModule.setup('api/docs', app, buildOpenApiDocument(app));
 }
 
 export const API_CONTRACT_VERSION = '1.0.0';

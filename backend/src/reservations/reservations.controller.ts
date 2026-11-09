@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CommitmentResponse, ReservationResponse } from '../api-responses';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
 import { AdjustReservationDto, CreateCommitmentDto, CreateReservationDto, ListReservationsQuery, SettleReservationDto } from './dto/reservation.dto';
@@ -11,7 +12,7 @@ import { ReservationsService } from './reservations.service';
 export class ReservationsController {
   constructor(private readonly reservations: ReservationsService) {}
 
-  @Get('commitments') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get('commitments') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [CommitmentResponse] })
   listCommitments(@CurrentUser() user: AuthUser) {
     return this.reservations.listCommitments(user);
   }
@@ -28,7 +29,7 @@ export class ReservationsController {
     return this.reservations.cancelCommitment(user, id);
   }
 
-  @Get('reservations') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get('reservations') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [ReservationResponse] })
   list(@CurrentUser() user: AuthUser, @Query() q: ListReservationsQuery) {
     return this.reservations.list(user, q.status);
   }

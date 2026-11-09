@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Headers, HttpCode, Param, ParseBoolPipe, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { GoalDetailResponse, GoalResponse } from '../api-responses';
 import { validateIdempotencyKey } from '../common/idempotency.service';
 import { AuthUser, CurrentUser, RequirePermissions } from '../common/auth-context';
 import { PERMISSIONS } from '../rbac/permissions';
@@ -12,13 +13,13 @@ import { GoalsService } from './goals.service';
 export class GoalsController {
   constructor(private readonly goals: GoalsService) {}
 
-  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get() @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: [GoalResponse] })
   @ApiQuery({ name: 'includeArchived', required: false, type: Boolean })
   list(@CurrentUser() user: AuthUser, @Query('includeArchived', new ParseBoolPipe({ optional: true })) includeArchived?: boolean) {
     return this.goals.list(user, includeArchived);
   }
 
-  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ)
+  @Get(':id') @RequirePermissions(PERMISSIONS.FINANCE_OWN_READ) @ApiOkResponse({ type: GoalDetailResponse })
   get(@CurrentUser() user: AuthUser, @Param('id', ParseUUIDPipe) id: string) {
     return this.goals.get(user, id);
   }

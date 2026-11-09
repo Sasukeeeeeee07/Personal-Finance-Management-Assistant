@@ -29,7 +29,7 @@ describe('CORS', () => {
   });
 
   it('production allows only the configured origins', () => {
-    const prod = loadConfig({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x', JWT_ACCESS_SECRET: 'x'.repeat(40), CORS_ORIGINS: 'https://app.example.com' });
+    const prod = loadConfig({ NODE_ENV: 'production', DATABASE_URL: 'postgres://x', JWT_ACCESS_SECRET: 'x'.repeat(40), CORS_ORIGINS: 'https://app.example.com', APP_WEB_URL: 'https://app.example.com' });
     expect(isAllowedOrigin(prod, 'https://app.example.com')).toBe(true);
     expect(isAllowedOrigin(prod, 'http://localhost:55014')).toBe(false);
     expect(isAllowedOrigin(prod, 'https://evil.example')).toBe(false);

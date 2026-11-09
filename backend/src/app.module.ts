@@ -1,10 +1,12 @@
-import { Controller, Get, Module } from '@nestjs/common';
+import { Controller, Get, Inject, Module, ServiceUnavailableException } from '@nestjs/common';
+import { sql } from 'kysely';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from './common/auth-context';
 import { APP_CONFIG, AppConfig, loadConfig } from './config/env';
-import { DatabaseModule } from './database/database.module';
+import { DATABASE, DatabaseModule } from './database/database.module';
+import type { DB } from './database/schema';
 import { AuthModule } from './auth/auth.module';
 import { AccountsController } from './accounts/accounts.controller';
 import { AccountsService } from './accounts/accounts.service';
@@ -23,13 +25,28 @@ import { GoalsController } from './goals/goals.controller';
 import { GoalsService } from './goals/goals.service';
 import { ForecastController, ForecastService } from './forecast/forecast.service';
 import { IdempotencyService } from './common/idempotency.service';
+import { ReportsController, ReportsService } from './reports/reports.service';
 
 @ApiTags('health')
 @Controller('health')
 class HealthController {
+  constructor(@Inject(DATABASE) private readonly db: DB) {}
+
+  /** Liveness: the process is up. */
   @Public() @Get()
   health() {
     return { status: 'ok' };
+  }
+
+  /** Readiness: the database answers. Used by the hosting platform's health check. */
+  @Public() @Get('ready')
+  async ready() {
+    try {
+      await sql`SELECT 1`.execute(this.db);
+      return { status: 'ok', database: 'ok' };
+    } catch {
+      throw new ServiceUnavailableException({ statusCode: 503, code: 'database_unavailable', message: 'Database is not reachable.' });
+    }
   }
 }
 
@@ -41,7 +58,7 @@ export function buildAppModule(config: AppConfig = loadConfig()) {
       ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: config.nodeEnv === 'test' ? 10_000 : 300 }]),
       AuthModule,
     ],
-    controllers: [HealthController, AccountsController, CategoriesController, TransactionsController, ReservationsController, DashboardController, OrganizationsController, BudgetsController, GoalsController, ForecastController],
+    controllers: [HealthController, AccountsController, CategoriesController, TransactionsController, ReservationsController, DashboardController, OrganizationsController, BudgetsController, GoalsController, ForecastController, ReportsController],
     providers: [
       { provide: APP_GUARD, useClass: ThrottlerGuard },
       LedgerService,
@@ -55,6 +72,7 @@ export function buildAppModule(config: AppConfig = loadConfig()) {
       GoalsService,
       ForecastService,
       IdempotencyService,
+      ReportsService,
     ],
   })
   class AppModule {}

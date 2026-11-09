@@ -240,3 +240,130 @@ export class TransactionInsightResponse {
 export class TransactionDetailResponse extends TransactionResponse {
   @ApiProperty({ type: TransactionInsightResponse, nullable: true, description: 'Expenses with a category only' }) insight: TransactionInsightResponse | null;
 }
+
+// --- reports ----------------------------------------------------------------------------------
+
+export class CategoryTotalResponse {
+  @UuidProp({ nullable: true }) categoryId: string | null;
+  @ApiProperty({ example: 'Food' }) name: string;
+  @MoneyProp() total: string;
+  @PercentProp() sharePercent: string;
+  @ApiProperty() count: number;
+}
+
+export class LargestExpenseResponse {
+  @UuidProp() id: string;
+  @MoneyProp() amount: string;
+  @ApiProperty() label: string;
+  @NullableString() category: string | null;
+  @TimestampProp() occurredAt: string;
+}
+
+export class PreviousMonthResponse {
+  @ApiProperty({ example: '2026-10' }) month: string;
+  @MoneyProp() income: string;
+  @MoneyProp() expenses: string;
+  @MoneyProp() incomeChange: string;
+  @MoneyProp() expensesChange: string;
+}
+
+export class MonthlyReportResponse {
+  @ApiProperty({ example: '2026-11' }) month: string;
+  @DateProp() periodStart: string;
+  @DateProp({ description: 'Exclusive' }) periodEnd: string;
+  @ApiProperty() currency: string;
+  @MoneyProp() income: string;
+  @MoneyProp() expenses: string;
+  @MoneyProp() net: string;
+  @PercentProp({ nullable: true }) savingsRatePercent: string | null;
+  @ApiProperty() expenseCount: number;
+  @MoneyProp() essential: string;
+  @MoneyProp() nonEssential: string;
+  @MoneyProp() planned: string;
+  @MoneyProp() unplanned: string;
+  @ApiProperty({ type: [CategoryTotalResponse] }) expensesByCategory: CategoryTotalResponse[];
+  @ApiProperty({ type: [CategoryTotalResponse] }) incomeByCategory: CategoryTotalResponse[];
+  @ApiProperty({ type: [LargestExpenseResponse] }) largestExpenses: LargestExpenseResponse[];
+  @ApiProperty({ type: PreviousMonthResponse }) previousMonth: PreviousMonthResponse;
+  @ApiProperty({ type: [String] }) notes: string[];
+}
+
+// --- Money Lock -------------------------------------------------------------------------------
+
+export class CommitmentResponse {
+  @UuidProp() id: string;
+  @ApiProperty() name: string;
+  @MoneyProp() amount: string;
+  @ApiProperty() currency: string;
+  @UuidProp() accountId: string;
+  @UuidProp({ nullable: true }) categoryId: string | null;
+  @ApiProperty({ enum: ['once', 'weekly', 'monthly', 'yearly', 'custom_days'] }) frequency: string;
+  @ApiProperty() intervalCount: number;
+  @DateProp() nextDueDate: string;
+  @ApiProperty() reminderDaysBefore: number;
+  @ApiProperty({ enum: ['active', 'cancelled', 'completed'] }) status: string;
+}
+
+export class ReservationResponse {
+  @UuidProp() id: string;
+  @UuidProp({ nullable: true }) commitmentId: string | null;
+  @UuidProp() accountId: string;
+  @ApiProperty() name: string;
+  @MoneyProp() targetAmount: string;
+  @MoneyProp() reservedAmount: string;
+  @MoneyProp() shortfall: string;
+  @ApiProperty() fullyReserved: boolean;
+  @DateProp() dueDate: string;
+  @ApiProperty({ enum: ['active', 'reconciled', 'released', 'cancelled'] }) status: string;
+  @ApiProperty() overdue: boolean;
+  @UuidProp({ nullable: true }) transactionId: string | null;
+  @MoneyProp({ nullable: true }) settledAmount: string | null;
+  @MoneyProp({ nullable: true }) variance: string | null;
+  @TimestampProp({ nullable: true }) closedAt: string | null;
+  @NullableString() closeReason: string | null;
+  @DateProp() occurrenceDate: string;
+  @UuidProp({ nullable: true }) createdFromReservationId: string | null;
+}
+
+// --- goals ------------------------------------------------------------------------------------
+
+export class GoalResponse {
+  @UuidProp() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: ['emergency_fund', 'gadget', 'vacation', 'education', 'vehicle', 'savings', 'custom'] }) kind: string;
+  @MoneyProp() targetAmount: string;
+  @ApiProperty() currency: string;
+  @DateProp({ nullable: true }) targetDate: string | null;
+  @MoneyProp({ nullable: true }) monthlyContribution: string | null;
+  @ApiProperty({ description: '1 high, 2 medium, 3 low' }) priority: number;
+  @UuidProp({ nullable: true }) accountId: string | null;
+  @ApiProperty({ enum: ['track_only', 'reserve'] }) allocationMode: string;
+  @ApiProperty({ enum: ['active', 'completed', 'archived'] }) status: string;
+  @TimestampProp({ nullable: true }) completedAt: string | null;
+  @MoneyProp() saved: string;
+  @MoneyProp() allocated: string;
+  @MoneyProp() movedByTransfers: string;
+  @MoneyProp() remaining: string;
+  @PercentProp() progressPercent: string;
+  @MoneyProp({ nullable: true }) recommendedMonthly: string | null;
+  @DateProp({ nullable: true }) estimatedCompletionDate: string | null;
+  @ApiProperty({ type: String, nullable: true, enum: ['planned_monthly_contribution', 'average_of_last_3_months'] }) estimateBasis: string | null;
+  @ApiProperty({ type: Boolean, nullable: true }) onTrack: boolean | null;
+  @ApiProperty() targetDatePassed: boolean;
+  @ApiProperty({ type: Number, nullable: true }) daysToTarget: number | null;
+}
+
+export class GoalContributionResponse {
+  @UuidProp() id: string;
+  @MoneyProp() amount: string;
+  @ApiProperty({ enum: ['contribution', 'withdrawal', 'reversal'] }) type: string;
+  @DateProp() date: string;
+  @NullableString() note: string | null;
+  @UuidProp({ nullable: true }) transactionId: string | null;
+  @UuidProp({ nullable: true }) reversesContributionId: string | null;
+  @ApiProperty() reversed: boolean;
+}
+
+export class GoalDetailResponse extends GoalResponse {
+  @ApiProperty({ type: [GoalContributionResponse] }) contributions: GoalContributionResponse[];
+}

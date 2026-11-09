@@ -136,6 +136,22 @@ describe('Response contract (frozen OpenAPI)', () => {
     for (const [file, path] of Object.entries(map)) validate(path, JSON.parse(readFileSync(join(dir, file), 'utf8')));
   });
 
+  it('GET /commitments, /reservations, /goals, /goals/{id} and /reports/monthly (MVP screens)', async () => {
+    validate('/api/v1/commitments', (await u.get('/commitments').expect(200)).body);
+    const reservations = (await u.get('/reservations').expect(200)).body;
+    expect(reservations.length).toBeGreaterThan(0);
+    validate('/api/v1/reservations', reservations);
+    const goals = (await u.get('/goals').expect(200)).body;
+    validate('/api/v1/goals', goals);
+    await u.post(`/goals/${goals[0].id}/contributions`, { type: 'withdrawal', amount: '100' }).expect(201);
+    validate('/api/v1/goals/{id}', (await u.get(`/goals/${goals[0].id}`).expect(200)).body);
+    validate('/api/v1/reports/monthly', (await u.get('/reports/monthly').expect(200)).body);
+    validate('/api/v1/reports/monthly', (await u.get('/reports/monthly?month=2026-10').expect(200)).body);
+    const fresh = await registerUser(t);
+    validate('/api/v1/reports/monthly', (await fresh.get('/reports/monthly').expect(200)).body);
+    validate('/api/v1/goals', (await fresh.get('/goals').expect(200)).body);
+  });
+
   it('the validator really rejects drift', () => {
     const fn = ajv.compile({ ...strict(responseSchema('/api/v1/accounts/{id}')), components: strict(FROZEN.components) });
     const good = { id: '00000000-0000-4000-8000-000000000000', name: 'a', type: 'savings', institutionName: null, accountMask: null, currency: 'INR', isLiquid: true, isLiability: false, creditLimit: null, openingDate: null, trackingStartDate: '2026-01-01', archived: false, balance: '1.00', outstanding: null, availableCredit: null };

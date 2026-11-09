@@ -15,7 +15,8 @@ export function createDatabase(opts: { databaseUrl?: string; pgliteDataDir?: str
   if (opts.databaseUrl) {
     types.setTypeParser(1082, (v) => v);
     types.setTypeParser(PG_INT8_OID, (v) => v);
-    const pool = new Pool({ connectionString: opts.databaseUrl, max: 10 });
+    // Serverless Postgres (Neon) may take a few seconds to wake from autosuspend.
+    const pool = new Pool({ connectionString: opts.databaseUrl, max: 10, connectionTimeoutMillis: 15_000, idleTimeoutMillis: 30_000 });
     return new Kysely<Database>({ dialect: new PostgresDialect({ pool }) });
   }
   const pglite = new PGlite({
